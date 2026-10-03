@@ -1,0 +1,1086 @@
+{
+  "format": "ro0000-android-battlemap-selector-crosscheck-v1",
+  "source": {
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "serverSelectorSource": "ro0000/server/merged-source/gmsv/data/map/battlemap.txt",
+    "targetLibraryHashes": {
+      "armeabi-v7a": {
+        "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+        "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+      },
+      "x86": {
+        "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+        "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+      }
+    }
+  },
+  "targetBattleMapTable": {
+    "filenameEntryStrideBytes": 512,
+    "sizeBytes": 112640,
+    "slotCount": 220,
+    "minimumIndexInclusive": 0,
+    "maximumIndexInclusive": 219,
+    "filenameTemplate": "data/battlemap/battle%03d.sabex"
+  },
+  "serverSelector": {
+    "activeBlockCount": 74,
+    "distinctCandidateCount": 199,
+    "selectedBattleMapNos": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      45,
+      46,
+      48,
+      49,
+      51,
+      52,
+      53,
+      54,
+      55,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      90,
+      91,
+      92,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      118,
+      119,
+      120,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      160,
+      161,
+      162,
+      163,
+      165,
+      166,
+      167,
+      168,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      194,
+      195,
+      196,
+      198,
+      199,
+      200,
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219
+    ],
+    "unusedAndroidSlots": [
+      0,
+      3,
+      17,
+      44,
+      47,
+      50,
+      56,
+      75,
+      89,
+      93,
+      116,
+      117,
+      121,
+      129,
+      130,
+      131,
+      159,
+      164,
+      169,
+      193,
+      197
+    ],
+    "allCandidatesWithinAndroidTable": true,
+    "reversedRanges": [
+      {
+        "blockLine": 267,
+        "rangeLine": 280,
+        "first": 3137,
+        "last": 1349,
+        "raw": "3137 to 1349"
+      }
+    ],
+    "duplicateImageAssignments": 1,
+    "blocks": [
+      {
+        "blockLine": 267,
+        "candidates": [
+          1,
+          2,
+          201
+        ],
+        "rangeCount": 16,
+        "validRangeCount": 15,
+        "reversedRangeCount": 1
+      },
+      {
+        "blockLine": 288,
+        "candidates": [
+          4,
+          5,
+          202
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 294,
+        "candidates": [
+          6,
+          7,
+          8
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 300,
+        "candidates": [
+          9,
+          10,
+          11
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 306,
+        "candidates": [
+          12,
+          13,
+          14
+        ],
+        "rangeCount": 2,
+        "validRangeCount": 2,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 313,
+        "candidates": [
+          15,
+          16,
+          203
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 319,
+        "candidates": [
+          18,
+          19,
+          20
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 325,
+        "candidates": [
+          21,
+          22,
+          23
+        ],
+        "rangeCount": 2,
+        "validRangeCount": 2,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 331,
+        "candidates": [
+          24,
+          25,
+          26
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 337,
+        "candidates": [
+          27,
+          28,
+          29
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 343,
+        "candidates": [
+          30,
+          31,
+          32
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 349,
+        "candidates": [
+          33,
+          34,
+          35
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 355,
+        "candidates": [
+          36,
+          37,
+          38
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 361,
+        "candidates": [
+          39,
+          40,
+          41
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 367,
+        "candidates": [
+          42,
+          43,
+          42
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 373,
+        "candidates": [
+          45,
+          46,
+          204
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 379,
+        "candidates": [
+          48,
+          49,
+          205
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 385,
+        "candidates": [
+          51,
+          52,
+          53
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 391,
+        "candidates": [
+          54,
+          55,
+          206
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 397,
+        "candidates": [
+          57,
+          58,
+          59
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 403,
+        "candidates": [
+          60,
+          61,
+          62
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 409,
+        "candidates": [
+          63,
+          64,
+          65
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 415,
+        "candidates": [
+          66,
+          67,
+          68
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 421,
+        "candidates": [
+          69,
+          70,
+          71
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 427,
+        "candidates": [
+          72,
+          73,
+          74
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 433,
+        "candidates": [
+          76,
+          77,
+          207
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 440,
+        "candidates": [
+          78,
+          79,
+          80
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 446,
+        "candidates": [
+          81,
+          82,
+          83
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 452,
+        "candidates": [
+          84,
+          85,
+          86
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 458,
+        "candidates": [
+          87,
+          88,
+          87
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 464,
+        "candidates": [
+          90,
+          91,
+          92
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 470,
+        "candidates": [
+          94,
+          95,
+          208
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 476,
+        "candidates": [
+          96,
+          97,
+          98
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 482,
+        "candidates": [
+          99,
+          100,
+          101
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 488,
+        "candidates": [
+          102,
+          103,
+          104
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 494,
+        "candidates": [
+          105,
+          106,
+          107
+        ],
+        "rangeCount": 5,
+        "validRangeCount": 5,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 504,
+        "candidates": [
+          108,
+          109,
+          110
+        ],
+        "rangeCount": 4,
+        "validRangeCount": 4,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 513,
+        "candidates": [
+          111,
+          112,
+          113
+        ],
+        "rangeCount": 5,
+        "validRangeCount": 5,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 523,
+        "candidates": [
+          114,
+          115,
+          209
+        ],
+        "rangeCount": 4,
+        "validRangeCount": 4,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 532,
+        "candidates": [
+          118,
+          119,
+          210
+        ],
+        "rangeCount": 6,
+        "validRangeCount": 6,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 543,
+        "candidates": [
+          120,
+          122,
+          211
+        ],
+        "rangeCount": 2,
+        "validRangeCount": 2,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 550,
+        "candidates": [
+          123,
+          124,
+          125
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 556,
+        "candidates": [
+          126,
+          127,
+          128
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 562,
+        "candidates": [
+          212,
+          213,
+          214
+        ],
+        "rangeCount": 2,
+        "validRangeCount": 2,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 569,
+        "candidates": [
+          132,
+          133,
+          134
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 575,
+        "candidates": [
+          135,
+          136,
+          137
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 581,
+        "candidates": [
+          138,
+          139,
+          140
+        ],
+        "rangeCount": 2,
+        "validRangeCount": 2,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 588,
+        "candidates": [
+          141,
+          142,
+          143
+        ],
+        "rangeCount": 2,
+        "validRangeCount": 2,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 595,
+        "candidates": [
+          144,
+          144,
+          144
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 601,
+        "candidates": [
+          145,
+          145,
+          145
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 607,
+        "candidates": [
+          146,
+          146,
+          146
+        ],
+        "rangeCount": 2,
+        "validRangeCount": 2,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 614,
+        "candidates": [
+          147,
+          147,
+          147
+        ],
+        "rangeCount": 3,
+        "validRangeCount": 3,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 621,
+        "candidates": [
+          148,
+          149,
+          150
+        ],
+        "rangeCount": 3,
+        "validRangeCount": 3,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 628,
+        "candidates": [
+          151,
+          152,
+          153
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 634,
+        "candidates": [
+          154,
+          155,
+          156
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 640,
+        "candidates": [
+          157,
+          158,
+          157
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 646,
+        "candidates": [
+          160,
+          161,
+          162
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 652,
+        "candidates": [
+          163,
+          165,
+          215
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 658,
+        "candidates": [
+          166,
+          167,
+          168
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 664,
+        "candidates": [
+          170,
+          171,
+          170
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 670,
+        "candidates": [
+          172,
+          173,
+          174
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 676,
+        "candidates": [
+          175,
+          176,
+          177
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 682,
+        "candidates": [
+          178,
+          179,
+          180
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 688,
+        "candidates": [
+          181,
+          182,
+          183
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 694,
+        "candidates": [
+          184,
+          185,
+          186
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 700,
+        "candidates": [
+          187,
+          188,
+          189
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 706,
+        "candidates": [
+          190,
+          191,
+          192
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 712,
+        "candidates": [
+          194,
+          195,
+          216
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 718,
+        "candidates": [
+          196,
+          198,
+          217
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 724,
+        "candidates": [
+          199,
+          199,
+          199
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 730,
+        "candidates": [
+          200,
+          200,
+          200
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 736,
+        "candidates": [
+          218,
+          218,
+          218
+        ],
+        "rangeCount": 4,
+        "validRangeCount": 4,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 745,
+        "candidates": [
+          219,
+          219,
+          219
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      },
+      {
+        "blockLine": 749,
+        "candidates": [
+          200,
+          200,
+          200
+        ],
+        "rangeCount": 1,
+        "validRangeCount": 1,
+        "reversedRangeCount": 0
+      }
+    ]
+  },
+  "interpretationBoundary": [
+    "The check proves that configured server candidate numbers fit the hash-anchored Android BattleMapFile index range.",
+    "It does not prove that the corresponding battleNNN.sabex payloads are present or valid.",
+    "The server map selector and the Android SABEX payload format remain separate evidence layers.",
+    "Reversed ranges and duplicate image assignments are reported as source-data anomalies and are not silently rewritten."
+  ]
+}
