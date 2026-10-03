@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：4a4b9b9 — fix: inject V4.46 battle round runtime dependencies
-- 更新時間：2026-10-03T17:47:22+08:00
+- 最新 commit：d13414e — fix: restore V4.46 round runtime factory
+- 更新時間：2026-10-03T17:48:33+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.46
 - Playable HTML：⏸️ 尚未建立（刻意保留）
