@@ -177,6 +177,23 @@ The inline mapping for IDs 60–79 resolves to the following one-byte results: `
 
 These rules close the auto-map color index/generation and cache format at the code level. They do not reproduce the final 100,000-byte table without the external image payloads, and the actual visual effect still requires those payloads or an original-client runtime comparison. The machine-readable fields are in `data/generated/stoneage_ro0000_android_native_resource_layout.json` under `autoMapColor`.
 
+### Auto-map composition and SDL rasterization
+
+The target's auto-map is a two-stage path: `drawAutoMap(x,y)` calls `createAutoMap(nowFloor,nowGx,nowGy)` when the initialization flag is set, clears that flag after the attempt, and then passes the 54×54 byte buffer to `DrawAutoMapping(x,y,buffer,54,54)`. A failed cache open leaves the buffer zeroed; the draw wrapper does not use the boolean return to retry on the next call.
+
+`createAutoMap()` centers a 54×54 window on the current grid position, starting at `(gx-27,gy-27)`. It clips that rectangle against the dimensions in the local map-cache header and places clipped rows/columns at the corresponding offset in zero-initialized staging buffers. It reads the cache's three uint16 planes in their established order: `tile`, `parts`, and `event`. Only cells with `event & 0x4000` set contribute visible color.
+
+Composition occurs in two passes:
+
+1. The base pass writes `autoMapColorTbl[tile]` for in-range tile IDs (below 100,000). This produces the terrain/base color layer.
+2. The parts pass looks up `autoMapColorTbl[parts]`; zero means no overlay. For a nonzero color, it resolves the parts ID with `realGetNo` and queries `realGetHitFlag`. A nonzero hit flag paints the current cell. A zero hit flag obtains `hitX/hitY` and paints the footprint at rows `i-k`, columns `j+l` for `k < hitY` and `l < hitX`, bounded by the top and right edges of the 54×54 output. Since this pass follows the base pass, parts colors can overwrite terrain colors.
+
+The drawing function locks the target `CSASurface`, reads each byte as an index into `highColor32Palette`, forces the high alpha byte to `0xff`, and writes four 32-bit pixels per logical cell at `p-4`, `p`, `p+4`, and `p-surfacePitch`. The pointer advances diagonally between cells and rows (`-(surfacePitch-8)` across a row and `surfacePitch+8` to the next row), producing the target's slanted map projection rather than a rectangular 1:1 tile grid. After a successful unlock, the surface texture is submitted with `SDL_RenderCopy`.
+
+When `ResoMode == 1`, the target halves the input x/y, render width/height, and origin offsets (to 10/58 after the observed +1/−1 adjustments), and samples the source buffer at a stride of two in each axis. The player marker is a separate four-pixel glyph using palette index 0 or 255; its value toggles on a 1,000 ms tick interval and its position is calculated from the rendered dimensions.
+
+This closes the target's auto-map composition and raster contract at the instruction/data-flow level. It does not produce the original image colors without the real map-cache and image resources, nor does it prove exact SDL output equivalence in a browser. The machine-readable details are in `data/generated/stoneage_ro0000_android_native_resource_layout.json` under `autoMapRendering`.
+
 ### ADRNBIN initialization corrections
 
 Besides the accessor behavior above, `AdrnInit()` performs a post-decode rewrite of the 16-bit value at record offset `0x1E` for two image-ID ranges:
