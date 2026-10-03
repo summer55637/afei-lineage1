@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：0534a8a — test: bind V4.54 profit credit dependency in legacy battle harness
-- 更新時間：2026-10-03T19:08:55+08:00
+- 最新 commit：79fd277 — test: add V4.55 carried loot attack integration
+- 更新時間：2026-10-03T19:15:29+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.54
 - Playable HTML：⏸️ 尚未建立（刻意保留）
