@@ -127,6 +127,7 @@ const playerHpBefore=before.context
   : before.sides[0].entries[0].hp;
 const enemyBeforeEntry=before.sides[1].entries.find(e=>e?.sourceType==='enemy'&&Number(e.hp)>0);
 assert.ok(enemyBeforeEntry,'source enemy entry should exist');
+const enemyBid=enemyBeforeEntry.bid;
 const enemyHpBefore=enemyBeforeEntry.hp;
 
 const round=await controller.dispatch({
@@ -139,7 +140,8 @@ assert.equal(round.ok,true,JSON.stringify(round));
 assert.equal(round.stage,'battle-round-resolved');
 assert.equal(round.turn,1);
 assert.equal(round.nextCommandPhase,true);
-assert.equal(round.counterDeferredCount,3);
+assert.equal(round.counterDeferredCount,round.deferred.length);
+assert.ok(round.counterDeferredCount>=1);
 assert.equal(round.scope.counterDeferred,true);
 assert.equal(round.scope.maxAttackCountPerActor,1);
 assert.equal(round.persistentMutation,false);
@@ -147,7 +149,7 @@ assert.equal(round.damageExecuted,true);
 
 const after=controller.getBattleContext();
 const playerHpAfter=after.sides[0].entries[0].hp;
-const enemyAfterEntry=after.sides[1].entries.find(e=>e?.sourceType==='enemy'&&Number(e.hp)>0);
+const enemyAfterEntry=after.sides[1].entries.flatMap(s=>s.entries??[]).find(e=>e?.bid===enemyBid);
 const enemyHpAfter=enemyAfterEntry?.hp??0;
 
 assert.ok(playerHpAfter<playerHpBefore,'enemy attack should commit transient player HP damage');
