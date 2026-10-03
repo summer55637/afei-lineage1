@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：10f2fa9 — test: bind V4.59 round fixture to current dependencies
-- 更新時間：2026-10-03T20:29:24+08:00
+- 最新 commit：906ad99 — ci: add V4.65 basic reward chain regression
+- 更新時間：2026-10-03T20:30:09+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.64
+- Regression 最高版本：V4.65
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.64 |
+| Battle Pipeline | ✅ V4.65 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
