@@ -1,0 +1,103 @@
+{
+  "format": "stoneage-public-group-provenance-audit-v1",
+  "checkedDate": "2026-10-03",
+  "purpose": "Public-web provenance search for the 30 active Encounter->Group references unresolved in the RO0000 endpoint snapshot.",
+  "targetGroupIds": [1,196,200,791,792,793,794,795,796,797,800,802,804,805,806,808,809,811,821,823,824,826,827,1131,1315,1316,1327,1328,1467,1500],
+  "searchPolicy": {
+    "publicSourcesAllowed": true,
+    "promoteOnlyWithProvenance": true,
+    "syntheticSubstitutionForbidden": true,
+    "enemyNameOrIdInferenceForbidden": true,
+    "guideOrForumInferenceForbidden": true
+  },
+  "publicSources": [
+    {
+      "source": "SourceForge SA80",
+      "project": "SA80 / 石器时代8.0数据规整",
+      "projectUrl": "https://sourceforge.net/projects/sa80/",
+      "fileUrl": "https://sourceforge.net/p/sa80/sa80.0/ci/master/tree/gmsv/data/group1.txt",
+      "fileSha256": "8513e05d698c9264f6f0eb6533fa8d395d0f5b92396e0755fa7f381b028a7099",
+      "fileSize": "75.1 kB",
+      "lineCount": 1352,
+      "lastProjectUpdate": "2016-12-11",
+      "fileHistoryUrl": "https://sourceforge.net/p/sa80/sa80.0/ci/38af265258244438a6d839682320e803b6a0f60b/log/?path=/gmsv/data/group1.txt",
+      "historicalNote": "The SourceForge file history shows a single initial Group-file commit in this public SA80 repository."
+    },
+    {
+      "source": "GitHub Physwf/physwf-c-lab",
+      "filePath": "stoneage2.5/gmsv/data/group1.txt",
+      "fileUrl": "https://github.com/Physwf/physwf-c-lab/blob/ce3e998749909f6880e239a74b233efcf15768f6/stoneage2.5/gmsv/data/group1.txt",
+      "blobSha": "4d7eefc874464c62c7ffe6e899e572cb3bafdd32",
+      "targetResult": "None of the 30 target Group IDs are present as Group rows."
+    },
+    {
+      "source": "GitHub wyhaha777/stoneage2.5",
+      "filePath": "linux/gmsv/data/group1.txt",
+      "fileUrl": "https://github.com/wyhaha777/stoneage2.5/blob/5eaef12d2972f9fdd1d8534249fe0caa84956ecc/linux/gmsv/data/group1.txt",
+      "blobSha": "4d7eefc874464c62c7ffe6e899e572cb3bafdd32",
+      "targetResult": "Same Group-file blob as Physwf/physwf-c-lab; none of the 30 target Group IDs are present as Group rows."
+    },
+    {
+      "source": "GitHub chenmingbiao/stone-age",
+      "filePath": "gmsv/data/group1.txt",
+      "fileUrl": "https://github.com/chenmingbiao/stone-age/blob/0c58fb6683a49a178a8ad845a8c296c2cb83bd81/gmsv/data/group1.txt",
+      "blobSha": "5f058f412fa729637f6bcb3d329943c8bb30dff8",
+      "targetResult": "None of the 30 target Group IDs are present as Group rows."
+    },
+    {
+      "source": "GitHub Lee-hajin/sking-sasrv",
+      "filePath": "pack/gmsv/data/group1.txt",
+      "fileUrl": "https://github.com/Lee-hajin/sking-sasrv/blob/3a3fdb46e0dfdc2aa132a4968327fdcd161c835d/pack/gmsv/data/group1.txt",
+      "blobSha": "c0aada9e730bf399ebba2fc977da6e2d6ae4aaca",
+      "targetResult": "Group 1131 and Group 1500 are present; the other 28 target Group IDs are absent as Group rows."
+    }
+  ],
+  "publiclyObservedTargetRows": [
+    {
+      "groupId": 1131,
+      "publicSource": "SourceForge SA80",
+      "row": "1V克达达,1131,-1,-1,428,429,430,1593,,,,,,,1,1,1,1,,,,,,",
+      "sourceUrl": "https://sourceforge.net/p/sa80/sa80.0/ci/master/tree/gmsv/data/group1.txt",
+      "status": "public-row-found-not-promoted",
+      "reason": "RO0000 endpoint only exposes a commented/inactive 1131 row; public active row is evidence of historical existence, not proof of RO0000 deployment activation."
+    },
+    {
+      "groupId": 1500,
+      "publicSource": "SourceForge SA80",
+      "row": "沉睡中,1500,-1,-1,5054,5055,5056,5057,,,,,,,1,1,1,1,,,,,,",
+      "sourceUrl": "https://sourceforge.net/p/sa80/sa80.0/ci/master/tree/gmsv/data/group1.txt",
+      "status": "public-row-found-not-promoted",
+      "reason": "RO0000 endpoint uses Group 1500 on Encounter 658 / floor 5507, while the public SA80 row is a different content variant; it cannot be promoted as RO0000 truth."
+    },
+    {
+      "groupId": 1131,
+      "publicSource": "GitHub Lee-hajin/sking-sasrv",
+      "row": "1V¿Ë´ï´ï,1131,-1,-1,428,429,430,1593,,,,,,,1,1,1,1,,,,,,",
+      "sourceUrl": "https://github.com/Lee-hajin/sking-sasrv/blob/3a3fdb46e0dfdc2aa132a4968327fdcd161c835d/pack/gmsv/data/group1.txt",
+      "status": "cross-source-confirmed-historical-row",
+      "reason": "The numeric composition matches the SourceForge SA80 1131 row; this strengthens historical provenance but still does not prove RO0000 endpoint activation."
+    },
+    {
+      "groupId": 1500,
+      "publicSource": "GitHub Lee-hajin/sking-sasrv",
+      "row": "ÖÐÇï¼Ù»ðË«Í·ÀÇ,1500,2236,-1,2821,1093,1100,1091,1105,,,,,,1,1,1,1,1,,,,,",
+      "sourceUrl": "https://github.com/Lee-hajin/sking-sasrv/blob/3a3fdb46e0dfdc2aa132a4968327fdcd161c835d/pack/gmsv/data/group1.txt",
+      "status": "public-row-found-different-variant",
+      "reason": "This is another public Group 1500 definition and differs from the SA80 1500 row, demonstrating version/deployment variance."
+    }
+  ],
+  "coverageSummary": {
+    "targetIds": 30,
+    "publicSourcesChecked": 5,
+    "historicallyObservedTargetIds": [1131,1500],
+    "targetIdsStillWithoutPublicGroupRow": 28,
+    "coreWorldTargetIdsStillWithoutPublicGroupRow": [791,792,793,794,800,808,809,811,824,827,1315,1316],
+    "status": "open-provenance-search"
+  },
+  "conclusion": {
+    "whatChanged": "The public-web search materially expands provenance evidence but does not yet close the RO0000 Group source gap.",
+    "safePromotion": "No target Group row is promoted into RO0000 runtime from public sources in this audit.",
+    "nextSearchPriority": "Continue searching older/newer GMSV data packages and historical mirrors for exact rows, prioritizing the core-world Group IDs.",
+    "reopenPromotionCondition": "Promote only when an authoritative or strongly compatible revision provides a complete column-verifiable Group row and provenance linking it to the target RO0000 deployment/variant."
+  }
+}
