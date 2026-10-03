@@ -436,6 +436,16 @@ The target libStoneage.so comparison remains separately visible: both x86 and AR
 
 The full machine-readable comparison is data/generated/stoneage_ro0000_android_jni_audit.json. It includes per-library hashes, JNI exports, declaration candidates, ABI-level match results, and package-associated JNI_OnLoad evidence. This remains a static name-level audit; actual registration, invocation, asynchronous effects, and device runtime behavior are not established.
 
+## Browser-side SPR/SPRADRN parser and safe target fixups
+
+`src/stoneage_spr_decoder.mjs` now parses the target's 12-byte SPRADRN index entries, 12-byte animation headers, and 10-byte on-disk frame records. It preserves the little-endian fields, applies the `nextMaxAdrnID` graphic-number base, and computes the target's stored frame duration (`frameCount == 0 ? 0 : sourceDtAnim / frameCount / 16`, with integer truncation). The 12-byte runtime frame stride remains distinct from the 10-byte file record.
+
+The parser rejects partial index records, duplicate slots, offsets or frame arrays extending beyond `spr.bin`, and sprite IDs that fall outside the allocated 40,000-entry `SpriteData` table. The APK's observed native guard is `slot > 40000`, which admits `slot == 40000` even though valid table indices end at 39999. The reconstruction parser deliberately uses the safe half-open range `[0, 40000)`; this is a browser/reconstruction hardening rule, not a claim that the original binary was patched.
+
+`applyTargetSpritePostLoadFixups()` separately reproduces the four documented target selectors (slots 260, 373, 382, and 820). It clones the parsed inventory, applies the frame/sound changes after the relevant sprite records are available, and fails closed when a selected record lacks the frames or source animation required by the target patch.
+
+Only synthetic inputs are available for these tests. Passing the parser and fixup tests validates structure handling and the explicitly recorded transformations; it does not validate any real `spradrn.bin`/`spr.bin` payload, sprite pixels, or audiovisual effect. Integration with an authorized external sprite asset pack remains separate from this parser.
+
 ## Interpretation boundary and remaining work
 
 The APK archive/Manifest, DEX structure, Java wrapper flow, signature verification result, and focused x86/ARM native ELF evidence are now reproducible. This remains a static audit, not a complete decompilation or runtime trace. Still unverified:
