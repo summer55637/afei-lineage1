@@ -25,8 +25,18 @@ function commitBattlePetExit(state,battleContext,plan,{transactionId=null,expect
     if(!pet)return {ok:false,handled:false,stage:'battle-pet-exit-commit',reason:'persistent-pet-missing',petId:String(row?.petId??'').trim(),state:clone(state)};
     const hp=intOr(pet.hp,null);
     if(hp==null||hp!==intOr(row.persistentHpBefore,null))return {ok:false,handled:false,stage:'battle-pet-exit-commit',reason:'pet-hp-stale-plan',petId:String(row?.petId??'').trim(),state:clone(state)};
+    const battleHp=intOr(row.battleHp,null);
+    const battleMaxHp=intOr(row.battleMaxHp,null);
     const hpAfter=intOr(row.hpAfter,null);
-    if(hpAfter==null||hpAfter<0)return {ok:false,handled:false,stage:'battle-pet-exit-commit',reason:'pet-plan-result-invalid',petId:String(row?.petId??'').trim(),state:clone(state)};
+    const mailMode=intOr(row.mailMode,null);
+    if(battleHp==null||battleHp<0||battleMaxHp==null||battleMaxHp<0||hpAfter==null||hpAfter<0||hpAfter>Math.max(1,battleMaxHp)){
+      return {ok:false,handled:false,stage:'battle-pet-exit-commit',reason:'pet-plan-result-invalid',petId:String(row?.petId??'').trim(),state:clone(state)};
+    }
+    if(row.sourceDeathCleanup===true){
+      if(mailMode!==0||hpAfter!==1)return {ok:false,handled:false,stage:'battle-pet-exit-commit',reason:'pet-death-cleanup-contract-invalid',petId:String(row?.petId??'').trim(),state:clone(state)};
+    }else if(hpAfter!==Math.min(battleHp,battleMaxHp)){
+      return {ok:false,handled:false,stage:'battle-pet-exit-commit',reason:'pet-hp-snapshot-mismatch',petId:String(row?.petId??'').trim(),state:clone(state)};
+    }
     pet.hp=hpAfter;
     if(row.sourceDeathCleanup===true)pet.isDie=false;
     committed.push({petId:String(row?.petId??'').trim(),hpBefore:hp,hpAfter,deathCleanup:row.sourceDeathCleanup===true});
