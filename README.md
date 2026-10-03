@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：0731a65 — [docs] record unverified Android external-resource candidate source
-- 更新時間：2026-10-03T10:22:30+08:00
+- 最新 commit：87e1719 — [docs] extend Android external-resource lineage evidence
+- 更新時間：2026-10-03T10:28:06+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
