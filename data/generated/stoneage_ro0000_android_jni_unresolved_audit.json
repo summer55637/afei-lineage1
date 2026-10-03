@@ -1,0 +1,32 @@
+{
+  "format": "ro0000-android-jni-unresolved-audit-v1",
+  "source": {"apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c"},
+  "counts": {"nativeDeclarations": 115, "staticMatchedEveryAbi": 97, "unresolved": 18},
+  "unresolved": [
+    {"class":"Lcom/tencent/apollo/ApolloVoiceEngine;","name":"StartBlueTooth","signature":"StartBlueTooth()I","status":"no-static-export-package-related-jni-onload"},
+    {"class":"Lcom/tencent/apollo/ApolloVoiceEngine;","name":"StopBlueTooth","signature":"StopBlueTooth()I","status":"no-static-export-package-related-jni-onload"},
+    {"class":"Lcom/tencent/apollo/apollovoice/httpclient/SRTTAPIHTTPTaskQueueImp;","name":"callback","signature":"callback(I[BI)V","status":"no-static-export-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"appendNativeLog","signature":"appendNativeLog(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"appendWholeNativeLog","signature":"appendWholeNativeLog(Ljava/lang/String;)Z","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"getNativeKeyValueList","signature":"getNativeKeyValueList()Ljava/lang/String;","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"getNativeLog","signature":"getNativeLog()Ljava/lang/String;","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"putNativeKeyValue","signature":"putNativeKeyValue(Ljava/lang/String;Ljava/lang/String;)Z","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"regist","signature":"regist(Ljava/lang/String;ZI)Ljava/lang/String;","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"removeNativeKeyValue","signature":"removeNativeKeyValue(Ljava/lang/String;)Ljava/lang/String;","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"setNativeInfo","signature":"setNativeInfo(ILjava/lang/String;)V","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"testCrash","signature":"testCrash()V","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;","name":"unregist","signature":"unregist()Ljava/lang/String;","status":"no-static-export-or-package-related-jni-onload"},
+    {"class":"Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;","name":"ChangeRole","signature":"ChangeRole(I)I","status":"no-static-export-package-related-jni-onload"},
+    {"class":"Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;","name":"EnableSpeakerOn","signature":"EnableSpeakerOn(Z)I","status":"no-static-export-package-related-jni-onload"},
+    {"class":"Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;","name":"IsSpeaking","signature":"IsSpeaking()I","status":"no-static-export-package-related-jni-onload"},
+    {"class":"Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;","name":"SetMicVolume","signature":"SetMicVolume(I)I","status":"no-static-export-package-related-jni-onload"},
+    {"class":"Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;","name":"SetVoiceEffects","signature":"SetVoiceEffects(I)I","status":"no-static-export-package-related-jni-onload"}
+  ],
+  "classification": {
+    "buglyNativeCrashHandler": 13,
+    "gcloudLegacyOrOptional": 5,
+    "apolloBluetoothWrappers": 2,
+    "apolloHttpCallback": 1
+  },
+  "scope": "Static JNI declaration/export comparison across all packaged native libraries; runtime invocation is not observed."
+}
