@@ -1,0 +1,39 @@
+name: check-v480-browser-idle-supply-auto-return
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_idle_supply_auto_return_runtime.mjs'
+      - 'src/stoneage_browser_idle_supply_route_runtime.mjs'
+      - 'src/stoneage_browser_idle_supply_route_execution_runtime.mjs'
+      - 'src/stoneage_browser_idle_supply_window_healer_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v480_browser_idle_supply_auto_return.mjs'
+      - 'data/generated/stoneage_first_idle_route_catalog.json'
+      - 'data/generated/stoneage_idle_supply_warp_catalog.json'
+      - 'data/generated/stoneage_recovery_service_source_catalog.json'
+      - 'data/generated/stoneage_world_npc_index.json'
+      - 'data/generated/stoneage_world_npc_functionset_audit.json'
+      - '.github/workflows/check-v480-browser-idle-supply-auto-return.yml'
+  workflow_dispatch:
+
+jobs:
+  idle-supply-auto-return:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run V4.80 idle supply auto return regression
+        run: node tools/check_v480_browser_idle_supply_auto_return.mjs
+      - name: Syntax check
+        run: |
+          node --check src/stoneage_browser_idle_supply_auto_return_runtime.mjs
+          node --check src/stoneage_browser_idle_supply_route_runtime.mjs
+          node --check src/stoneage_browser_idle_supply_route_execution_runtime.mjs
+          node --check src/stoneage_browser_idle_supply_window_healer_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v480_browser_idle_supply_auto_return.mjs
