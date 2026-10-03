@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ENEMY_EXP_RUNTIME_FORMAT='stoneage-v456-browser-battle-enemy-exp-credit-v1';
+const BROWSER_BATTLE_ENEMY_EXP_RUNTIME_FORMAT='stoneage-v457-browser-battle-enemy-exp-credit-v1';
 const ACTION_BATTLE_ENEMY_EXP_CREDIT='BATTLE_ENEMY_EXP_CREDIT';
 const EXPGET_MAXLEVEL=5;
 const EXPGET_DIV=15;
@@ -51,7 +51,7 @@ function resolveParticipantExp(actor,enemyExp){
   return {nowexp,actorLevel,enemyLevel:int(actor?.enemyLevel)??null,levelDelta:delta};
 }
 
-function creditEnemyExp(context,{enemyBid=null,participantBids=[],enemyExpOverride=null,source='attack',hitIndex=null,transactionPrefix='enemy-exp',now=null}={}){
+function creditEnemyExp(context,{enemyBid=null,participantBids=[],ridePetBidByParticipantBid={},enemyExpOverride=null,source='attack',hitIndex=null,transactionPrefix='enemy-exp',now=null}={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-enemy-exp',action:ACTION_BATTLE_ENEMY_EXP_CREDIT,reason:'battle-context-required'};
   const eBid=int(enemyBid),enemy=findEntry(context,eBid);
   if(eBid==null||eBid<10||!enemy)return {ok:false,handled:false,stage:'battle-enemy-exp',action:ACTION_BATTLE_ENEMY_EXP_CREDIT,reason:'enemy-entry-required'};
@@ -77,7 +77,23 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],enemyExpOverri
     const beforeKills=int(actor.killPetCount)??0;
     actor.workGetExp=beforeWork+calc.nowexp;
     actor.killPetCount=beforeKills+1;
-    credits.push({enemyBid:eBid,actorBid:bid,exp:calc.nowexp,workGetExpBefore:beforeWork,workGetExpAfter:actor.workGetExp,killPetCountBefore:beforeKills,killPetCountAfter:actor.killPetCount,levelDelta:calc.levelDelta});
+    const ridePetRaw=ridePetBidByParticipantBid?.[String(bid)]??ridePetBidByParticipantBid?.[bid]??null;
+    let ridePetCredit=null;
+    if(ridePetRaw!=null){
+      const ridePetBid=int(ridePetRaw);
+      const ridePet=findEntry(next,ridePetBid);
+      if(ridePet==null||String(ridePet.sourceType??'').trim().toLowerCase()!=='pet'){
+        return {ok:false,handled:false,stage:'battle-enemy-exp',action:ACTION_BATTLE_ENEMY_EXP_CREDIT,reason:'ride-pet-entry-required',enemyBid:eBid,actorBid:bid,ridePetBid};
+      }
+      const rideCalc=resolveParticipantExp({...ridePet,enemyLevel:enemy.level},resolved.exp);
+      const rideBefore=int(ridePet.workGetExp)??0;
+      const rideKillsBefore=int(ridePet.killPetCount)??0;
+      const rideExp=Math.trunc(rideCalc.nowexp*0.6);
+      ridePet.workGetExp=rideBefore+rideExp;
+      ridePet.killPetCount=rideKillsBefore+1;
+      ridePetCredit={ridePetBid,exp:rideExp,workGetExpBefore:rideBefore,workGetExpAfter:ridePet.workGetExp,killPetCountBefore:rideKillsBefore,killPetCountAfter:ridePet.killPetCount,levelDelta:rideCalc.levelDelta,multiplier:0.6};
+    }
+    credits.push({enemyBid:eBid,actorBid:bid,exp:calc.nowexp,workGetExpBefore:beforeWork,workGetExpAfter:actor.workGetExp,killPetCountBefore:beforeKills,killPetCountAfter:actor.killPetCount,levelDelta:calc.levelDelta,ridePetCredit});
   }
   const enemyNext=findEntry(next,eBid);
   enemyNext.sourceExpCreditProcessed=true;
@@ -92,7 +108,7 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],enemyExpOverri
     enemyExpResolution:resolved,newCredits:credits,totalCreditEvents:events.length,
     source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',
       functions:['BATTLE_AddExpItem','ENEMY_getExp'],boundary:'workGetExp + KILLPETCOUNT after carried getitem queue'},
-    persistentMutation:false,expSettlementDeferred:true,levelUpDeferred:true,ridePetExpDeferred:true,
+    persistentMutation:false,expSettlementDeferred:true,levelUpDeferred:true,ridePetExpDeferred:false,
     context:next.context,transactionPrefix:String(transactionPrefix??'enemy-exp'),now:now??null
   };
 }
