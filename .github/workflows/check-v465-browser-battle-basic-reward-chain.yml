@@ -1,0 +1,34 @@
+name: Check V4.65 browser battle basic reward chain
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_profit_credit_runtime.mjs'
+      - 'src/stoneage_browser_battle_carried_loot_runtime.mjs'
+      - 'src/stoneage_browser_battle_enemy_exp_runtime.mjs'
+      - 'src/stoneage_browser_battle_relife_runtime.mjs'
+      - 'tools/check_v465_browser_battle_basic_reward_chain.mjs'
+      - '.github/workflows/check-v465-browser-battle-basic-reward-chain.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.65 basic reward chain regression
+        run: node tools/check_v465_browser_battle_basic_reward_chain.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_profit_credit_runtime.mjs
+          node --check src/stoneage_browser_battle_carried_loot_runtime.mjs
+          node --check src/stoneage_browser_battle_enemy_exp_runtime.mjs
+          node --check src/stoneage_browser_battle_relife_runtime.mjs
+          node --check tools/check_v465_browser_battle_basic_reward_chain.mjs
