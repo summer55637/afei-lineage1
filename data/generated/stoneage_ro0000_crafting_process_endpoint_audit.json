@@ -1,0 +1,310 @@
+{
+  "format": "stoneage-ro0000-crafting-process-endpoint-audit-v1",
+  "updated": "2026-10-03",
+  "sourceRoot": "ro0000/server/merged-source/gmsv/data/npc/eden3/process",
+  "files": [
+    "blacksmith1.arg",
+    "blacksmith2.arg",
+    "blacksmith3.arg",
+    "blacksmith4.arg",
+    "blacksmith5.arg",
+    "blacksmith6.arg",
+    "blacksmith7.arg",
+    "blacksmith8.arg"
+  ],
+  "dataHydataIdenticalForAll8": true,
+  "recipeCount": 40,
+  "recipes": [
+    {
+      "file": "blacksmith1.arg",
+      "out": 20245,
+      "inputs": "20287*1,19641*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith1.arg",
+      "out": 20246,
+      "inputs": "20287*4,19729*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith1.arg",
+      "out": 20247,
+      "inputs": "20287*6,20169*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith1.arg",
+      "out": 20248,
+      "inputs": "20287*7,20581*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith1.arg",
+      "out": 20249,
+      "inputs": "20287*8,20582*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith1.arg",
+      "out": 20250,
+      "inputs": "20287*10,20583*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith2.arg",
+      "out": 20251,
+      "inputs": "20287*1,19642*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith2.arg",
+      "out": 20252,
+      "inputs": "20287*4,19730*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith2.arg",
+      "out": 20253,
+      "inputs": "20287*6,20180*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith2.arg",
+      "out": 20254,
+      "inputs": "20287*7,20584*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith2.arg",
+      "out": 20255,
+      "inputs": "20287*8,20585*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith2.arg",
+      "out": 20256,
+      "inputs": "20287*10,20586*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith3.arg",
+      "out": 20257,
+      "inputs": "20287*1,19643*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith3.arg",
+      "out": 20258,
+      "inputs": "20287*4,19731*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith3.arg",
+      "out": 20259,
+      "inputs": "20287*6,20177*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith3.arg",
+      "out": 20260,
+      "inputs": "20287*7,20587*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith3.arg",
+      "out": 20261,
+      "inputs": "20287*8,20588*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith3.arg",
+      "out": 20262,
+      "inputs": "20287*10,20589*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith4.arg",
+      "out": 20263,
+      "inputs": "20287*1,19644*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith4.arg",
+      "out": 20264,
+      "inputs": "20287*4,19732*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith4.arg",
+      "out": 20265,
+      "inputs": "20287*6,20185*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith4.arg",
+      "out": 20266,
+      "inputs": "20287*7,20590*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith4.arg",
+      "out": 20267,
+      "inputs": "20287*8,20591*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith4.arg",
+      "out": 20268,
+      "inputs": "20287*10,20592*1",
+      "gold": 1500,
+      "flags": "ENDEV=4&ENDEV=81"
+    },
+    {
+      "file": "blacksmith5.arg",
+      "out": 20269,
+      "inputs": "20287*13,20191*1",
+      "gold": 15000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith6.arg",
+      "out": 20270,
+      "inputs": "20286*3,13078*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith6.arg",
+      "out": 20271,
+      "inputs": "20286*7,20270*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith6.arg",
+      "out": 20272,
+      "inputs": "20286*13,20271*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith6.arg",
+      "out": 20273,
+      "inputs": "20286*3,13076*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith6.arg",
+      "out": 20274,
+      "inputs": "20286*7,20273*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith6.arg",
+      "out": 20275,
+      "inputs": "20286*13,20274*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith7.arg",
+      "out": 20278,
+      "inputs": "20285*13,20277*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith7.arg",
+      "out": 20281,
+      "inputs": "20285*13,20280*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith7.arg",
+      "out": 20284,
+      "inputs": "20285*13,20283*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith8.arg",
+      "out": 20276,
+      "inputs": "20285*1,13075*1,13082*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith8.arg",
+      "out": 20277,
+      "inputs": "20285*5,20276*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith8.arg",
+      "out": 20279,
+      "inputs": "20285*1,13074*1,13082*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith8.arg",
+      "out": 20280,
+      "inputs": "20285*5,20279*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith8.arg",
+      "out": 20282,
+      "inputs": "20285*1,13078*1,13082*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    },
+    {
+      "file": "blacksmith8.arg",
+      "out": 20283,
+      "inputs": "20285*5,20282*1",
+      "gold": 10000,
+      "flags": "ENDEV=4&ENDEV=69"
+    }
+  ],
+  "runtime": {
+    "fixedSource": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "eventDsl": "CHANGEITEM + NeedItem + FREE condition + DelGold + DelItem + AddItem",
+    "relevantEffects": "Consumes required materials and gold, then adds the specified crafted item when event/Item/gold conditions pass.",
+    "scope": "endpoint-primary crafting data useful to single-player equipment/economy progression"
+  },
+  "notes": {
+    "materialItems": "20287 is the common magic-ring base in these recipes; 20286 is copper material; 20285 is iron material.",
+    "gate": "blacksmith1-4 use ENDEV=4&81; blacksmith5-8 use ENDEV=4&69.",
+    "policy": "Keep exact endpoint recipe IDs and conditions; do not substitute historical Fixed-C recipes."
+  }
+}
