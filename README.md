@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：3374d0b — [cleanup] keep only game-useful Android analysis
-- 更新時間：2026-10-03T12:09:40+08:00
+- 最新 commit：41fb96f — [docs] record game-useful Android analysis scope rule
+- 更新時間：2026-10-03T12:11:23+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
