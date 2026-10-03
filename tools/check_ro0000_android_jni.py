@@ -33,10 +33,10 @@ class JniDeclarationExportTests(unittest.TestCase):
         )
 
     def test_selects_only_registration_helper_symbols(self):
-        readelf = """  1: 00001000 40 FUNC GLOBAL DEFAULT 11 _ZN6apollo13JniMethodMgr4InitEP7_JNIEnvPPci
+        readelf = """  1: 00001000 40 FUNC GLOBAL DEFAULT 11 _ZN6apollo12JniMethodMgr4InitEP7_JNIEnvPPci
   2: 00002000 20 FUNC GLOBAL DEFAULT 11 LoadMultiThreadClass
   3: 00003000 12 FUNC GLOBAL DEFAULT 11 unrelated_helper
-  4: 00000000  0 FUNC GLOBAL DEFAULT UND _ZN6apollo13JniMethodMgr4InitEP7_JNIEnvPPci
+  4: 00000000  0 FUNC GLOBAL DEFAULT UND _ZN6apollo12JniMethodMgr4InitEP7_JNIEnvPPci
 """
         records = parse_defined_function_records(readelf)
         self.assertEqual(len(records), 3)
@@ -48,7 +48,7 @@ class JniDeclarationExportTests(unittest.TestCase):
 
     def test_select_registration_helper_by_demangled_name(self):
         records = [{
-            "rawName": "_ZN6apollo13JniMethodMgr4InitEP7_JNIEnvPPci",
+            "rawName": "_ZN6apollo12JniMethodMgr4InitEP7_JNIEnvPPci",
             "value": "0x1000",
             "size": 40,
         }]
