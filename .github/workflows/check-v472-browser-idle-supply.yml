@@ -1,0 +1,27 @@
+name: check-v472-browser-idle-supply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_idle_supply_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v472_browser_idle_supply.mjs'
+      - '.github/workflows/check-v472-browser-idle-supply.yml'
+  workflow_dispatch:
+
+jobs:
+  check-v472-browser-idle-supply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check V4.72 idle supply boundary
+        run: node tools/check_v472_browser_idle_supply.mjs
+      - name: Syntax check runtime/controller
+        run: |
+          node --check src/stoneage_browser_idle_supply_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
