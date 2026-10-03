@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：4966fb2 — [docs] auto-update V4.74 recovery service source catalog
-- 更新時間：2026-10-03T14:59:45Z
+- 最新 commit：12878c3 — test: add V4.75 hospital map runtime regression
+- 更新時間：2026-10-03T23:02:14+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.74
 - Playable HTML：⏸️ 尚未建立（刻意保留）
