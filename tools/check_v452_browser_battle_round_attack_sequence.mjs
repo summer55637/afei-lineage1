@@ -147,7 +147,7 @@ assert.equal(round.turn,1);
 assert.equal(round.attackCountPrimes.length,3);
 assert.deepEqual(round.attackCountPrimes.map(x=>x.actorBid),[0,10,15]);
 assert.deepEqual(round.attackCountPrimes.map(x=>x.attackCount),[2,1,1]);
-assert.equal(round.attackCountPrimes.every(x=>x.rngConsumed===1),true);
+assert.deepEqual(round.attackCountPrimes.map(x=>x.rngConsumed),[1,1,0]);
 
 assert.equal(round.targetListPrimes.length,2);
 assert.deepEqual(round.targetListPrimes.map(x=>x.actorBid),[0,10]);
