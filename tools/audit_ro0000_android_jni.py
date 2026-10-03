@@ -77,7 +77,7 @@ def summarize_onload_disassembly(disassembly):
     indirect_calls = 0
     instruction_count = 0
     for line in disassembly.splitlines():
-        if not re.match(r"^\\s*[0-9a-fA-F]+:", line):
+        if not re.match(r"^\s*[0-9a-fA-F]+:", line):
             continue
         instruction_count += 1
         rest = line.split(":", 1)[1].strip()
@@ -94,7 +94,7 @@ def summarize_onload_disassembly(disassembly):
             continue
         target = re.search(r"<([^>]+)>", operands)
         if target:
-            name = re.sub(r"\\+0x[0-9a-fA-F]+$", "", target.group(1).strip())
+            name = re.sub(r"\+0x[0-9a-fA-F]+$", "", target.group(1).strip())
             name = re.sub(r"(?:@@Base|@plt|@PLT)$", "", name)
             if name and name != "JNI_OnLoad":
                 calls.append(name)
