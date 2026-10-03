@@ -30,6 +30,18 @@
       "sourceBlobSha": "dcbb20f0212192fc852e1489a29a0d6d8d4c95ce",
       "sourcePath": "gmsv/data/map/jyaruga/jalga"
     },
+    "300": {
+      "path": "data/generated/stoneage_map_300.json",
+      "floorId": 300,
+      "width": 600,
+      "height": 600,
+      "tileCount": 360000,
+      "objectCount": 360000,
+      "uniqueTileCount": 271,
+      "uniqueObjectCount": 253,
+      "sourceBlobSha": "40a290d9434b63de927af16a01e9655181b6f759",
+      "sourcePath": "gmsv/data/map/giiru/giiru"
+    },
     "400": {
       "path": "data/generated/stoneage_map_400.json",
       "floorId": 400,
@@ -39,6 +51,30 @@
       "objectCount": 22350,
       "sourceBlobSha": "acce0b34492112a41684d449afd03f9b0033f4e3",
       "sourcePath": "gmsv/data/map/seimu/400"
+    },
+    "500": {
+      "path": "data/generated/stoneage_map_500.json",
+      "floorId": 500,
+      "width": 800,
+      "height": 800,
+      "tileCount": 640000,
+      "objectCount": 640000,
+      "uniqueTileCount": 602,
+      "uniqueObjectCount": 205,
+      "sourceBlobSha": "43f0a0b58a3d7d8b34fac6dd796b9a438d8688d8",
+      "sourcePath": "gmsv/data/map/poru/boraisland"
+    },
+    "817": {
+      "path": "data/generated/stoneage_map_817.json",
+      "floorId": 817,
+      "width": 400,
+      "height": 600,
+      "tileCount": 240000,
+      "objectCount": 240000,
+      "uniqueTileCount": 276,
+      "uniqueObjectCount": 354,
+      "sourceBlobSha": "0063e5d5eeffeb33740105701139d74a486bbfa7",
+      "sourcePath": "gmsv/data/map/80map/817"
     },
     "1000": {
       "path": "data/generated/stoneage_map_1000.json",
@@ -51,6 +87,54 @@
       "uniqueObjectCount": 146,
       "sourceBlobSha": "21dbde227a447c8258184cf16f1b015f8e30ed7d",
       "sourcePath": "gmsv/data/map/sainasu/samugiru/samugiru"
+    },
+    "1040": {
+      "path": "data/generated/stoneage_map_1040.json",
+      "floorId": 1040,
+      "width": 80,
+      "height": 80,
+      "tileCount": 6400,
+      "objectCount": 6400,
+      "uniqueTileCount": 342,
+      "uniqueObjectCount": 81,
+      "sourceBlobSha": "d5aab113a752062f8de1155c8152ad97bc3708a8",
+      "sourcePath": "gmsv/data/map/family/100/1040"
+    },
+    "1100": {
+      "path": "data/generated/stoneage_map_1100.json",
+      "floorId": 1100,
+      "width": 130,
+      "height": 150,
+      "tileCount": 19500,
+      "objectCount": 19500,
+      "uniqueTileCount": 329,
+      "uniqueObjectCount": 74,
+      "sourceBlobSha": "b0ff1893da1b5cc891de7d2aa851ebac8cfbd370",
+      "sourcePath": "gmsv/data/map/sainasu/kuo/kuomura"
+    },
+    "1300": {
+      "path": "data/generated/stoneage_map_1300.json",
+      "floorId": 1300,
+      "width": 100,
+      "height": 100,
+      "tileCount": 10000,
+      "objectCount": 10000,
+      "uniqueTileCount": 385,
+      "uniqueObjectCount": 54,
+      "sourceBlobSha": "993bd0f3334f33113d4378d15180d25f8a2564ff",
+      "sourcePath": "gmsv/data/map/sainasu/hotoru/hotoru"
+    },
+    "1400": {
+      "path": "data/generated/stoneage_map_1400.json",
+      "floorId": 1400,
+      "width": 150,
+      "height": 150,
+      "tileCount": 22500,
+      "objectCount": 22500,
+      "uniqueTileCount": 193,
+      "uniqueObjectCount": 75,
+      "sourceBlobSha": "4e093551b9278c24dc4b37c8ab9a378ba247e5fc",
+      "sourcePath": "gmsv/data/map/sainasu/katan/katan"
     },
     "2000": {
       "path": "data/generated/stoneage_map_2000.json",
@@ -74,6 +158,66 @@
       "sourceBlobSha": "15d6ad9d56ea842b2c812a9e58e430b9cfec7dfa",
       "sourcePath": "gmsv/data/map/jyaruga/jaja/jaja"
     },
+    "3030": {
+      "path": "data/generated/stoneage_map_3030.json",
+      "floorId": 3030,
+      "width": 80,
+      "height": 80,
+      "tileCount": 6400,
+      "objectCount": 6400,
+      "uniqueTileCount": 210,
+      "uniqueObjectCount": 84,
+      "sourceBlobSha": "059968268e6051a86b9d1f9303d2b203f2fcc87e",
+      "sourcePath": "gmsv/data/map/family/300/3030"
+    },
+    "3100": {
+      "path": "data/generated/stoneage_map_3100.json",
+      "floorId": 3100,
+      "width": 120,
+      "height": 120,
+      "tileCount": 14400,
+      "objectCount": 14400,
+      "uniqueTileCount": 424,
+      "uniqueObjectCount": 82,
+      "sourceBlobSha": "c7a7b9d19c4cf5fcc849ca7dd81a6bc4bd4e08fe",
+      "sourcePath": "gmsv/data/map/jyaruga/tamtam/tamtam"
+    },
+    "3200": {
+      "path": "data/generated/stoneage_map_3200.json",
+      "floorId": 3200,
+      "width": 120,
+      "height": 120,
+      "tileCount": 14400,
+      "objectCount": 14400,
+      "uniqueTileCount": 480,
+      "uniqueObjectCount": 96,
+      "sourceBlobSha": "40709ec6b65acbc6cc296b9240fa26550b962f00",
+      "sourcePath": "gmsv/data/map/jyaruga/toto/toto"
+    },
+    "3300": {
+      "path": "data/generated/stoneage_map_3300.json",
+      "floorId": 3300,
+      "width": 120,
+      "height": 120,
+      "tileCount": 14400,
+      "objectCount": 14400,
+      "uniqueTileCount": 183,
+      "uniqueObjectCount": 48,
+      "sourceBlobSha": "d468d8bfd1e956577ca69f2b05e65aab7a652c8c",
+      "sourcePath": "gmsv/data/map/jyaruga/ururi/ururi"
+    },
+    "3400": {
+      "path": "data/generated/stoneage_map_3400.json",
+      "floorId": 3400,
+      "width": 120,
+      "height": 120,
+      "tileCount": 14400,
+      "objectCount": 14400,
+      "uniqueTileCount": 282,
+      "uniqueObjectCount": 53,
+      "sourceBlobSha": "ddb2597009b38c44e37dba4f4f97f070ebd8e706",
+      "sourcePath": "gmsv/data/map/jyaruga/kikuku/kikuku"
+    },
     "4000": {
       "path": "data/generated/stoneage_map_4000.json",
       "floorId": 4000,
@@ -86,6 +230,66 @@
       "sourceBlobSha": "1429c3717685b9fb05ff7f07979cc1ce967c3eea",
       "sourcePath": "gmsv/data/map/jyaruga/karutana/karutana"
     },
+    "4030": {
+      "path": "data/generated/stoneage_map_4030.json",
+      "floorId": 4030,
+      "width": 80,
+      "height": 80,
+      "tileCount": 6400,
+      "objectCount": 6400,
+      "uniqueTileCount": 308,
+      "uniqueObjectCount": 60,
+      "sourceBlobSha": "f90336ab94599d7c10961c9bb8aeb24e6ad32698",
+      "sourcePath": "gmsv/data/map/family/400/4030"
+    },
+    "5000": {
+      "path": "data/generated/stoneage_map_5000.json",
+      "floorId": 5000,
+      "width": 90,
+      "height": 90,
+      "tileCount": 8100,
+      "objectCount": 8100,
+      "uniqueTileCount": 101,
+      "uniqueObjectCount": 104,
+      "sourceBlobSha": "25d4abd89e3010fecfee56bdb103daa80588e689",
+      "sourcePath": "gmsv/data/map/giiru/south/furuudo"
+    },
+    "5100": {
+      "path": "data/generated/stoneage_map_5100.json",
+      "floorId": 5100,
+      "width": 90,
+      "height": 90,
+      "tileCount": 8100,
+      "objectCount": 8100,
+      "uniqueTileCount": 64,
+      "uniqueObjectCount": 82,
+      "sourceBlobSha": "2b868fc7200d4210a803757ca03f0a3909f48064",
+      "sourcePath": "gmsv/data/map/giiru/north/dana"
+    },
+    "5500": {
+      "path": "data/generated/stoneage_map_5500.json",
+      "floorId": 5500,
+      "width": 50,
+      "height": 30,
+      "tileCount": 1500,
+      "objectCount": 1500,
+      "uniqueTileCount": 69,
+      "uniqueObjectCount": 41,
+      "sourceBlobSha": "a37dd43a48f692d0680de9ea71bef81a3c8c375c",
+      "sourcePath": "gmsv/data/map/poru/5500"
+    },
+    "5501": {
+      "path": "data/generated/stoneage_map_5501.json",
+      "floorId": 5501,
+      "width": 60,
+      "height": 60,
+      "tileCount": 3600,
+      "objectCount": 3600,
+      "uniqueTileCount": 62,
+      "uniqueObjectCount": 23,
+      "sourceBlobSha": "1a20daec106471c6c440e04af54e2263f3dde519",
+      "sourcePath": "gmsv/data/map/poru/5501"
+    },
     "5507": {
       "path": "data/generated/stoneage_map_5507.json",
       "floorId": 5507,
@@ -95,6 +299,66 @@
       "objectCount": 10000,
       "sourceBlobSha": "5a49c005a4891c010812f6864d0b8b522d2428ac",
       "sourcePath": "gmsv/data/map/poru/5507"
+    },
+    "5511": {
+      "path": "data/generated/stoneage_map_5511.json",
+      "floorId": 5511,
+      "width": 30,
+      "height": 30,
+      "tileCount": 900,
+      "objectCount": 900,
+      "uniqueTileCount": 40,
+      "uniqueObjectCount": 18,
+      "sourceBlobSha": "41dcc928569fa54439bd0de838e6c33447a47a4d",
+      "sourcePath": "gmsv/data/map/poru/5511"
+    },
+    "5530": {
+      "path": "data/generated/stoneage_map_5530.json",
+      "floorId": 5530,
+      "width": 60,
+      "height": 60,
+      "tileCount": 3600,
+      "objectCount": 3600,
+      "uniqueTileCount": 117,
+      "uniqueObjectCount": 25,
+      "sourceBlobSha": "b3a329da6d6fb0eb6a51f5f9f088f43560e0501c",
+      "sourcePath": "gmsv/data/map/poru/5530"
+    },
+    "5532": {
+      "path": "data/generated/stoneage_map_5532.json",
+      "floorId": 5532,
+      "width": 40,
+      "height": 40,
+      "tileCount": 1600,
+      "objectCount": 1600,
+      "uniqueTileCount": 100,
+      "uniqueObjectCount": 32,
+      "sourceBlobSha": "055ffb8a068bb3c458675f4458708201e46aaddd",
+      "sourcePath": "gmsv/data/map/poru/5532"
+    },
+    "5536": {
+      "path": "data/generated/stoneage_map_5536.json",
+      "floorId": 5536,
+      "width": 60,
+      "height": 60,
+      "tileCount": 3600,
+      "objectCount": 3600,
+      "uniqueTileCount": 301,
+      "uniqueObjectCount": 31,
+      "sourceBlobSha": "de17de36ab181e528c896914e92ef021cc3d6f35",
+      "sourcePath": "gmsv/data/map/poru/5536"
+    },
+    "6000": {
+      "path": "data/generated/stoneage_map_6000.json",
+      "floorId": 6000,
+      "width": 92,
+      "height": 117,
+      "tileCount": 10764,
+      "objectCount": 10764,
+      "uniqueTileCount": 252,
+      "uniqueObjectCount": 45,
+      "sourceBlobSha": "bc3ec6817fd9f342b64c02290e2c2ab3a1430d43",
+      "sourcePath": "gmsv/data/map/seimu/kinui/6000"
     },
     "10406": {
       "path": "data/generated/stoneage_map_10406.json",

@@ -1,0 +1,689 @@
+{
+  "format": "stoneage-main-world-map-coverage-wave1-v1",
+  "generatedAt": "2026-10-03T08:57:09.688Z",
+  "source": {
+    "repository": "gavinlinasd/StoneAge",
+    "ref": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "headerScanner": "tools/check_v314_stoneage_map_headers.mjs"
+  },
+  "purpose": "Promote source-backed main-world map floors into the canonical map runtime. No synthetic map, warp, remap, or cross-version substitution is permitted.",
+  "baseline": {
+    "sourceMapBlobCount": 1284,
+    "sourceMapHeaderFloorCount": 1250,
+    "mapwarpRows": 5457,
+    "mapwarpMissingMapFloorRows": 0,
+    "mapwarpOutOfBoundsRows": 0,
+    "existingCoreWorldRuntimeFloors": [
+      100,
+      200,
+      400,
+      1000,
+      2000,
+      3000,
+      4000
+    ],
+    "existingCoreWorldRuntimeCount": 7
+  },
+  "wave": {
+    "targetCount": 22,
+    "candidateFloors": [
+      300,
+      500,
+      1040,
+      1100,
+      1300,
+      1400,
+      817,
+      3030,
+      3100,
+      3200,
+      3300,
+      3400,
+      4030,
+      5000,
+      5100,
+      6000,
+      5500,
+      5501,
+      5511,
+      5530,
+      5532,
+      5536
+    ],
+    "generatedCount": 22,
+    "alreadyVerifiedCount": 0,
+    "blockedCount": 0,
+    "promotedCoreWorldRuntimeFloors": [
+      100,
+      200,
+      300,
+      400,
+      500,
+      817,
+      1000,
+      1040,
+      1100,
+      1300,
+      1400,
+      2000,
+      3000,
+      3030,
+      3100,
+      3200,
+      3300,
+      3400,
+      4000,
+      4030,
+      5000,
+      5100,
+      5500,
+      5501,
+      5511,
+      5530,
+      5532,
+      5536,
+      6000
+    ]
+  },
+  "candidates": [
+    {
+      "floor": 300,
+      "branch": "core-world",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 62,
+        "outboundRows": 47,
+        "inboundRows": 63,
+        "linkedFloors": [
+          1214,
+          5000,
+          5100,
+          30101,
+          30104,
+          30105,
+          30106,
+          30108,
+          30201,
+          30205,
+          30301,
+          30307,
+          30401,
+          30403,
+          30501,
+          30504,
+          30505,
+          30600,
+          30606,
+          30701,
+          30703,
+          31001,
+          31101,
+          31201,
+          31205,
+          31601,
+          31701,
+          31706,
+          31801,
+          31805,
+          31901,
+          32001,
+          32021
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_300.json",
+      "sourcePath": "gmsv/data/map/giiru/giiru",
+      "sourceBlobSha": "40a290d9434b63de927af16a01e9655181b6f759",
+      "width": 600,
+      "height": 600,
+      "tileCount": 360000,
+      "objectCount": 360000
+    },
+    {
+      "floor": 500,
+      "branch": "floor-500",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 12,
+        "outboundRows": 5,
+        "inboundRows": 17,
+        "linkedFloors": [
+          5500,
+          5501,
+          5511,
+          5530,
+          5532,
+          5533,
+          5536
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_500.json",
+      "sourcePath": "gmsv/data/map/poru/boraisland",
+      "sourceBlobSha": "43f0a0b58a3d7d8b34fac6dd796b9a438d8688d8",
+      "width": 800,
+      "height": 800,
+      "tileCount": 640000,
+      "objectCount": 640000
+    },
+    {
+      "floor": 1040,
+      "branch": "floor-100-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 10,
+        "outboundRows": 9,
+        "inboundRows": 17,
+        "linkedFloors": [
+          100,
+          1041,
+          1043,
+          1045,
+          1046,
+          1047,
+          1048
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_1040.json",
+      "sourcePath": "gmsv/data/map/family/100/1040",
+      "sourceBlobSha": "d5aab113a752062f8de1155c8152ad97bc3708a8",
+      "width": 80,
+      "height": 80,
+      "tileCount": 6400,
+      "objectCount": 6400
+    },
+    {
+      "floor": 1100,
+      "branch": "floor-100-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 18,
+        "outboundRows": 19,
+        "inboundRows": 20,
+        "linkedFloors": [
+          100,
+          1101,
+          1102,
+          1103,
+          1104,
+          1105,
+          1106,
+          1112,
+          10201
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_1100.json",
+      "sourcePath": "gmsv/data/map/sainasu/kuo/kuomura",
+      "sourceBlobSha": "b0ff1893da1b5cc891de7d2aa851ebac8cfbd370",
+      "width": 130,
+      "height": 150,
+      "tileCount": 19500,
+      "objectCount": 19500
+    },
+    {
+      "floor": 1300,
+      "branch": "floor-100-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 16,
+        "outboundRows": 23,
+        "inboundRows": 23,
+        "linkedFloors": [
+          100,
+          1301,
+          1302,
+          1303,
+          1304,
+          1305,
+          1306,
+          1310
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_1300.json",
+      "sourcePath": "gmsv/data/map/sainasu/hotoru/hotoru",
+      "sourceBlobSha": "993bd0f3334f33113d4378d15180d25f8a2564ff",
+      "width": 100,
+      "height": 100,
+      "tileCount": 10000,
+      "objectCount": 10000
+    },
+    {
+      "floor": 1400,
+      "branch": "floor-100-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 15,
+        "outboundRows": 16,
+        "inboundRows": 17,
+        "linkedFloors": [
+          100,
+          1401,
+          1402,
+          1403,
+          1404,
+          1405,
+          1406,
+          10408
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_1400.json",
+      "sourcePath": "gmsv/data/map/sainasu/katan/katan",
+      "sourceBlobSha": "4e093551b9278c24dc4b37c8ab9a378ba247e5fc",
+      "width": 150,
+      "height": 150,
+      "tileCount": 22500,
+      "objectCount": 22500
+    },
+    {
+      "floor": 817,
+      "branch": "floor-200-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 16,
+        "outboundRows": 7,
+        "inboundRows": 27,
+        "linkedFloors": [
+          200,
+          8000,
+          8007,
+          8009,
+          8015,
+          8027,
+          8028,
+          8029,
+          8100,
+          8101,
+          8113
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_817.json",
+      "sourcePath": "gmsv/data/map/80map/817",
+      "sourceBlobSha": "0063e5d5eeffeb33740105701139d74a486bbfa7",
+      "width": 400,
+      "height": 600,
+      "tileCount": 240000,
+      "objectCount": 240000
+    },
+    {
+      "floor": 3030,
+      "branch": "floor-200-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 10,
+        "outboundRows": 15,
+        "inboundRows": 21,
+        "linkedFloors": [
+          200,
+          3031,
+          3033,
+          3035,
+          3036,
+          3037,
+          3038
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_3030.json",
+      "sourcePath": "gmsv/data/map/family/300/3030",
+      "sourceBlobSha": "059968268e6051a86b9d1f9303d2b203f2fcc87e",
+      "width": 80,
+      "height": 80,
+      "tileCount": 6400,
+      "objectCount": 6400
+    },
+    {
+      "floor": 3100,
+      "branch": "floor-200-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 14,
+        "outboundRows": 16,
+        "inboundRows": 19,
+        "linkedFloors": [
+          200,
+          3103,
+          3104,
+          3105,
+          3106,
+          3109,
+          3110
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_3100.json",
+      "sourcePath": "gmsv/data/map/jyaruga/tamtam/tamtam",
+      "sourceBlobSha": "c7a7b9d19c4cf5fcc849ca7dd81a6bc4bd4e08fe",
+      "width": 120,
+      "height": 120,
+      "tileCount": 14400,
+      "objectCount": 14400
+    },
+    {
+      "floor": 3200,
+      "branch": "floor-200-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 12,
+        "outboundRows": 14,
+        "inboundRows": 15,
+        "linkedFloors": [
+          200,
+          3203,
+          3204,
+          3205,
+          3206,
+          3209
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_3200.json",
+      "sourcePath": "gmsv/data/map/jyaruga/toto/toto",
+      "sourceBlobSha": "40709ec6b65acbc6cc296b9240fa26550b962f00",
+      "width": 120,
+      "height": 120,
+      "tileCount": 14400,
+      "objectCount": 14400
+    },
+    {
+      "floor": 3300,
+      "branch": "floor-200-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 12,
+        "outboundRows": 11,
+        "inboundRows": 14,
+        "linkedFloors": [
+          200,
+          3303,
+          3304,
+          3305,
+          3306,
+          3309
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_3300.json",
+      "sourcePath": "gmsv/data/map/jyaruga/ururi/ururi",
+      "sourceBlobSha": "d468d8bfd1e956577ca69f2b05e65aab7a652c8c",
+      "width": 120,
+      "height": 120,
+      "tileCount": 14400,
+      "objectCount": 14400
+    },
+    {
+      "floor": 3400,
+      "branch": "floor-200-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 14,
+        "outboundRows": 16,
+        "inboundRows": 17,
+        "linkedFloors": [
+          200,
+          3403,
+          3404,
+          3405,
+          3406,
+          3409,
+          3412
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_3400.json",
+      "sourcePath": "gmsv/data/map/jyaruga/kikuku/kikuku",
+      "sourceBlobSha": "ddb2597009b38c44e37dba4f4f97f070ebd8e706",
+      "width": 120,
+      "height": 120,
+      "tileCount": 14400,
+      "objectCount": 14400
+    },
+    {
+      "floor": 4030,
+      "branch": "floor-200-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 10,
+        "outboundRows": 6,
+        "inboundRows": 14,
+        "linkedFloors": [
+          200,
+          4031,
+          4033,
+          4035,
+          4036,
+          4037,
+          4038
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_4030.json",
+      "sourcePath": "gmsv/data/map/family/400/4030",
+      "sourceBlobSha": "f90336ab94599d7c10961c9bb8aeb24e6ad32698",
+      "width": 80,
+      "height": 80,
+      "tileCount": 6400,
+      "objectCount": 6400
+    },
+    {
+      "floor": 5000,
+      "branch": "floor-300-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 10,
+        "outboundRows": 10,
+        "inboundRows": 13,
+        "linkedFloors": [
+          300,
+          5001,
+          5003,
+          5005,
+          31301
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_5000.json",
+      "sourcePath": "gmsv/data/map/giiru/south/furuudo",
+      "sourceBlobSha": "25d4abd89e3010fecfee56bdb103daa80588e689",
+      "width": 90,
+      "height": 90,
+      "tileCount": 8100,
+      "objectCount": 8100
+    },
+    {
+      "floor": 5100,
+      "branch": "floor-300-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 10,
+        "outboundRows": 11,
+        "inboundRows": 19,
+        "linkedFloors": [
+          300,
+          5101,
+          5103,
+          5105,
+          5106
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_5100.json",
+      "sourcePath": "gmsv/data/map/giiru/north/dana",
+      "sourceBlobSha": "2b868fc7200d4210a803757ca03f0a3909f48064",
+      "width": 90,
+      "height": 90,
+      "tileCount": 8100,
+      "objectCount": 8100
+    },
+    {
+      "floor": 6000,
+      "branch": "floor-400-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 12,
+        "outboundRows": 15,
+        "inboundRows": 16,
+        "linkedFloors": [
+          40,
+          400,
+          6004,
+          6005,
+          6006,
+          6009
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_6000.json",
+      "sourcePath": "gmsv/data/map/seimu/kinui/6000",
+      "sourceBlobSha": "bc3ec6817fd9f342b64c02290e2c2ab3a1430d43",
+      "width": 92,
+      "height": 117,
+      "tileCount": 10764,
+      "objectCount": 10764
+    },
+    {
+      "floor": 5500,
+      "branch": "floor-500-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 2,
+        "outboundRows": 5,
+        "inboundRows": 1,
+        "linkedFloors": [
+          500
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_5500.json",
+      "sourcePath": "gmsv/data/map/poru/5500",
+      "sourceBlobSha": "a37dd43a48f692d0680de9ea71bef81a3c8c375c",
+      "width": 50,
+      "height": 30,
+      "tileCount": 1500,
+      "objectCount": 1500
+    },
+    {
+      "floor": 5501,
+      "branch": "floor-500-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 4,
+        "outboundRows": 3,
+        "inboundRows": 2,
+        "linkedFloors": [
+          500,
+          5502
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_5501.json",
+      "sourcePath": "gmsv/data/map/poru/5501",
+      "sourceBlobSha": "1a20daec106471c6c440e04af54e2263f3dde519",
+      "width": 60,
+      "height": 60,
+      "tileCount": 3600,
+      "objectCount": 3600
+    },
+    {
+      "floor": 5511,
+      "branch": "floor-500-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 2,
+        "outboundRows": 3,
+        "inboundRows": 0,
+        "linkedFloors": [
+          500,
+          5510
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_5511.json",
+      "sourcePath": "gmsv/data/map/poru/5511",
+      "sourceBlobSha": "41dcc928569fa54439bd0de838e6c33447a47a4d",
+      "width": 30,
+      "height": 30,
+      "tileCount": 900,
+      "objectCount": 900
+    },
+    {
+      "floor": 5530,
+      "branch": "floor-500-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 2,
+        "outboundRows": 2,
+        "inboundRows": 2,
+        "linkedFloors": [
+          500
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_5530.json",
+      "sourcePath": "gmsv/data/map/poru/5530",
+      "sourceBlobSha": "b3a329da6d6fb0eb6a51f5f9f088f43560e0501c",
+      "width": 60,
+      "height": 60,
+      "tileCount": 3600,
+      "objectCount": 3600
+    },
+    {
+      "floor": 5532,
+      "branch": "floor-500-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 2,
+        "outboundRows": 1,
+        "inboundRows": 1,
+        "linkedFloors": [
+          500
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_5532.json",
+      "sourcePath": "gmsv/data/map/poru/5532",
+      "sourceBlobSha": "055ffb8a068bb3c458675f4458708201e46aaddd",
+      "width": 40,
+      "height": 40,
+      "tileCount": 1600,
+      "objectCount": 1600
+    },
+    {
+      "floor": 5536,
+      "branch": "floor-500-branch",
+      "status": "generated",
+      "graph": {
+        "nodePresent": true,
+        "directedEdgeCount": 5,
+        "outboundRows": 9,
+        "inboundRows": 6,
+        "linkedFloors": [
+          500,
+          5537,
+          5538
+        ]
+      },
+      "runtimePath": "data/generated/stoneage_map_5536.json",
+      "sourcePath": "gmsv/data/map/poru/5536",
+      "sourceBlobSha": "de17de36ab181e528c896914e92ef021cc3d6f35",
+      "width": 60,
+      "height": 60,
+      "tileCount": 3600,
+      "objectCount": 3600
+    }
+  ],
+  "promotionGate": {
+    "exactLS2MAPHeader": true,
+    "exactFixedSourceRef": "1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "exactBlobSha": true,
+    "mapsetImageCoverage": "required by generate_verified_map_runtime.mjs",
+    "battlemapCandidateCoverage": "required by generate_verified_map_runtime.mjs",
+    "runtimeIndexAdmission": "required",
+    "coordinateLevelRouteProof": "separate gate; not implied by map generation",
+    "idleRouteAdmission": "separate gate; not implied by map generation"
+  }
+}
