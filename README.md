@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：86d047d — feat: pass AddProfit death-extra inputs through round
-- 更新時間：2026-10-03T19:54:49+08:00
+- 最新 commit：4e839d1 — ci: add V4.61 death-extra regression
+- 更新時間：2026-10-03T19:55:23+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.60
+- Regression 最高版本：V4.61
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.60 |
+| Battle Pipeline | ✅ V4.61 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
