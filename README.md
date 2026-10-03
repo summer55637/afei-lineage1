@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：5363a29 — fix: match asymmetric hospital MapWarp row counts
-- 更新時間：2026-10-03T23:09:53+08:00
+- 最新 commit：89c571b — fix: support array-shaped start warp catalog v2
+- 更新時間：2026-10-03T23:10:31+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.77
 - Playable HTML：⏸️ 尚未建立（刻意保留）
