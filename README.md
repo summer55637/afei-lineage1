@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：f67c8d3 — fix: mutate cloned state and validate Marefia snapshots
-- 更新時間：2026-10-03T19:59:05+08:00
+- 最新 commit：6c738fa — docs: record v462-browser-battle-death-extra-commit.md
+- 更新時間：2026-10-03T19:59:40+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.62
 - Playable HTML：⏸️ 尚未建立（刻意保留）
