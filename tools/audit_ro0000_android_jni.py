@@ -71,6 +71,87 @@ def parse_jni_onload_symbols(readelf_output):
     return sorted(records, key=lambda item: (int(item["value"], 16), item["size"]))
 
 
+
+def parse_defined_function_records(readelf_output):
+    """Parse defined function symbols without retaining raw output."""
+    records = []
+    for line in readelf_output.splitlines():
+        fields = line.split()
+        if len(fields) < 8 or not fields[0].endswith(":"):
+            continue
+        if not fields[0][:-1].isdigit() or fields[3] != "FUNC" or fields[6] == "UND":
+            continue
+        try:
+            value = int(fields[1], 16)
+            size = int(fields[2], 10)
+        except ValueError:
+            continue
+        raw_name = fields[7].split("@", 1)[0]
+        if raw_name:
+            records.append({
+                "rawName": raw_name,
+                "value": "0x%x" % value,
+                "size": size,
+            })
+    unique = {
+        (item["rawName"], item["value"], item["size"]): item
+        for item in records
+    }
+    return sorted(unique.values(), key=lambda item: (int(item["value"], 16), item["rawName"]))
+
+
+def select_registration_helper_records(records, cxxfilt="c++filt"):
+    """Select only method-manager/class-loader helpers relevant to JNI_OnLoad."""
+    if not records:
+        return []
+    names = [item["rawName"] for item in records]
+    demangled = dict(zip(names, names))
+    if cxxfilt:
+        proc = subprocess.run(
+            [cxxfilt], input="\n".join(names) + "\n",
+            check=False, capture_output=True, text=True, errors="replace",
+        )
+        if proc.returncode == 0:
+            values = proc.stdout.splitlines()
+            if len(values) == len(names):
+                demangled = dict(zip(names, values))
+    selected = []
+    for item in records:
+        display = demangled.get(item["rawName"], item["rawName"])
+        if "JniMethodMgr::Init(" in display or re.search(r"\bLoadMultiThreadClass(?:\(|$)", display):
+            selected.append({**item, "demangled": re.sub(r"\s+", " ", display).strip()})
+    return selected[:12]
+
+
+def inspect_registration_helpers(binary_path, readelf_output, objdump):
+    evidence = []
+    records = select_registration_helper_records(parse_defined_function_records(readelf_output))
+    for record in records:
+        command = [
+            objdump, "-d", "--demangle", "--disassemble=" + record["rawName"],
+            str(binary_path),
+        ]
+        proc = subprocess.run(
+            command, check=False, capture_output=True, text=True, errors="replace",
+        )
+        if proc.returncode:
+            evidence.append({
+                "function": record["demangled"],
+                "value": record["value"],
+                "size": record["size"],
+                "status": "disassembly-unavailable",
+            })
+            continue
+        summary = summarize_onload_disassembly(proc.stdout)
+        evidence.append({
+            "function": record["demangled"],
+            "value": record["value"],
+            "size": record["size"],
+            "status": "disassembly-ok" if summary["instructionLineCount"] else "no-instruction-output",
+            "callSummary": summary,
+        })
+    return evidence
+
 def summarize_onload_disassembly(disassembly):
     """Keep only call-level evidence; do not publish raw vendor disassembly."""
     calls = []
@@ -290,6 +371,10 @@ def inspect_apk_libraries(apk_path, readelf, objdump="objdump", declarations=Non
                 "jniExports": symbols,
                 "jniOnLoadExported": has_onload,
                 "jniOnLoadEvidence": onload_evidence,
+                "jniRegistrationHelperEvidence": (
+                    inspect_registration_helpers(local_path, readelf_output, objdump)
+                    if onload_records else []
+                ),
             })
     return by_abi
 
