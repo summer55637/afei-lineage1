@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：ad8e4d9 — test: cover V4.70 auto factory lifecycle forwarding
-- 更新時間：2026-10-03T22:30:40+08:00
+- 最新 commit：7e18252 — ci: include controller in V4.70 lifecycle guard
+- 更新時間：2026-10-03T22:31:29+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.70
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -29,7 +29,7 @@
 | 區域 | 現況 |
 |---|---|
 | First-route spine | ✅ 已閉合（4/4 出生城、8/8 direct warp） |
-| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；⚠️ 完整自動戰鬥待串接（基礎策略已實作） |
+| Full first-route | ✅ 路徑已閉合（8/8 portal groups）；✅ 自動戰鬥＋戰後結算已串接（V4.70） |
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
@@ -47,6 +47,7 @@
 - [Rebuild roadmap](docs/rebuild-roadmap.md)
 - [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)
 - [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)
+    - [V4.70 Full auto battle lifecycle](docs/reference/v470-browser-battle-auto-full-lifecycle.md)
     - [V4.26 Battle damage commit](docs/reference/v426-browser-battle-damage-commit.md)
 - [Android battle-map 33×33 lineage audit](docs/reference/ro0000-android-battle-map-lineage-audit.md)
 - [Generated state / evidence](data/generated/)
