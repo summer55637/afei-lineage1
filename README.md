@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：2c0004c — docs: extend RO0000 single-player item and pet-skill closure
-- 更新時間：2026-10-03T15:35:33+08:00
+- 最新 commit：33bd5dc — docs: extend RO0000 core runtime data closure
+- 更新時間：2026-10-03T15:38:01+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
