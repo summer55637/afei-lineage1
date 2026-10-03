@@ -40,7 +40,7 @@ IO_API_HINTS = {
 }
 
 FOCUSED_FUNCTION_RE = re.compile(
-    r"^(?:BattleProc|master|get_num|get_command_asc|set_damage_num|showDamage_num|AdrnInit|adrnDecode|readHitMap|checkHitMap|checkEmptyMap(?:Data)?|"
+    r"^(?:BattleProc|master|get_num|get_command_asc|set_damage_num|showDamage_num|damage_dispx|AdrnInit|adrnDecode|readHitMap|checkHitMap|checkEmptyMap(?:Data)?|"
     r"_checkEmptyMap|realGet[A-Za-z]*|LoadSprbin|InitSprBinFileOpen|"
     r"InitPteernSeparationBin|LoadStoneAgeLUA(?:Path)?|ReLoadStoneAgeLUA|"
     r"myluaload|DownLoadIniFile|GetBinaryResource|UpdateAppNewVersion|DownloadResource|"
