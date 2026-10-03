@@ -13,6 +13,7 @@ import { createBrowserBattleCriticalDamageRuntime } from '../src/stoneage_browse
 import { createBrowserBattleDamageReactRuntime } from '../src/stoneage_browser_battle_damage_react_runtime.mjs';
 import { createBrowserBattleDamageReactCommitRuntime } from '../src/stoneage_browser_battle_damage_react_commit_runtime.mjs';
 import { createBrowserBattleDamageDeathChainRuntime } from '../src/stoneage_browser_battle_damage_death_chain_runtime.mjs';
+import { createBrowserBattleProfitCreditRuntime } from '../src/stoneage_browser_battle_profit_credit_runtime.mjs';
 import { createBrowserBattleStatusRuntime } from '../src/stoneage_browser_battle_status_runtime.mjs';
 import { createBrowserBattleEndRuntime } from '../src/stoneage_browser_battle_end_runtime.mjs';
 
@@ -62,6 +63,7 @@ const context={
   }
 };
 
+const profitCreditRuntime=createBrowserBattleProfitCreditRuntime();
 const attackCountRuntime=createBrowserBattleAttackCountRuntime();
 const targetListRuntime=createBrowserBattleTargetListRuntime();
 const counterRuntime=createBrowserBattleCounterRuntime();
@@ -73,6 +75,7 @@ const damageReactRuntime=createBrowserBattleDamageReactRuntime();
 const damageReactCommitRuntime=createBrowserBattleDamageReactCommitRuntime();
 const damageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
 const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
+  profitCreditRuntime,
   attackPreflightRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
@@ -85,6 +88,7 @@ const statusRuntime=createBrowserBattleStatusRuntime();
 const endRuntime=createBrowserBattleEndRuntime();
 
 const counterChainRuntime=createBrowserBattleCounterChainRuntime({
+  profitCreditRuntime,
   counterRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
