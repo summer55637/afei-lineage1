@@ -94,6 +94,7 @@ class AndroidNativeElfAuditTests(unittest.TestCase):
             "ReadAniFile(int)",
             "SpecAnim(int)",
             "play_map_bgm(int)",
+            "getNearestColorIndex(unsigned int, SDL_Color*, int)",
         ]
         for candidate in candidates:
             with self.subTest(candidate=candidate):
