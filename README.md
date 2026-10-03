@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：a3d9129 — [docs] document Android warp-map coordinate reset
-- 更新時間：2026-10-03T08:44:46+08:00
+- 最新 commit：00d2157 — [test] fix world-map ABI anchor regression fixture
+- 更新時間：2026-10-03T08:45:19+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
