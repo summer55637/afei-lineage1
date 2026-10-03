@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：8f4287a — test: align V4.65 relife ordering contract
-- 更新時間：2026-10-03T21:31:13+08:00
+- 最新 commit：0f8f795 — test: fix V4.65 ordering fixture wrapper
+- 更新時間：2026-10-03T21:32:56+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.66
 - Playable HTML：⏸️ 尚未建立（刻意保留）
