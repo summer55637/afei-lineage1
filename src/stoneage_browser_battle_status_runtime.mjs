@@ -2,6 +2,7 @@ const BROWSER_BATTLE_STATUS_RUNTIME_FORMAT='stoneage-browser-battle-status-runti
 const ACTION_BATTLE_STATUS_TURN='BATTLE_STATUS_TURN';
 const ACTION_BATTLE_STATUS_APPLY='BATTLE_STATUS_APPLY';
 const ACTION_BATTLE_STATUS_APPLY_RAW='BATTLE_STATUS_APPLY_RAW';
+import { battleTargetCheck } from './stoneage_browser_battle_target_runtime.mjs';
 
 const BATTLE_COM_NONE=0;
 const BATTLE_COM_ATTACK=1;
@@ -246,7 +247,9 @@ function confusionTarget(context,actor,randomInt){
     pos=(pos+1)%10;
     const candidate=chosenSide.entries?.[pos]??null;
     probes.push(intOr(candidate?.bid,null));
-    if(!candidate||candidate===actor||intOr(candidate.hp,0)<=0||candidate.isDie===true)continue;
+    if(!candidate||candidate===actor)continue;
+    const checked=battleTargetCheck(candidate);
+    if(!checked.ok)continue;
     return {target:candidate,sideRoll,posRoll,probed:probes};
   }
   return {target:null,sideRoll,posRoll,probed:probes};
