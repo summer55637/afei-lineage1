@@ -22,20 +22,27 @@ function commitBattleExit(state,plan,{transactionId=null,expectedRevision=null,n
   const playerExit=resolveBattlePlayerExitForSettlement(state,{
     settlementReceiptId:plan.settlementReceiptId,
     settlementStartRevision:plan.settlementStartRevision,
-    settlementReceiptRevision:plan.settlementReceiptRevision
+    settlementReceiptRevision:plan.settlementReceiptRevision,
+    allowPetExitStateSync:true
   });
   if(!playerExit.ok)return {ok:false,handled:false,stage:'battle-exit-commit',reason:playerExit.reason,receiptId:plan.settlementReceiptId??null,state:clone(state)};
   if(String(plan.playerExitTransactionId??'').trim()!==playerExit.transactionId)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-transaction-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
   if(intOr(plan.playerExitRevision,null)!==intOr(playerExit.record.revisionAfter,null))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-revision-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
-  if(currentRevision!==intOr(playerExit.record.revisionAfter,null))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-revision-current-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
   const petSyncTx=String(plan.petExitStateTransactionId??'').trim();
+  const playerExitRevision=intOr(playerExit.record.revisionAfter,null);
+  if(currentRevision!==playerExitRevision){
+    if(!(plan.petExitStateRequired===true&&petSyncTx)){
+      return {ok:false,handled:false,stage:'battle-exit-commit',reason:'player-exit-revision-current-mismatch',receiptId:plan.settlementReceiptId??null,state:clone(state)};
+    }
+  }
   if(plan.petExitStateRequired===true){
     if(!petSyncTx)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-state-transaction-required',state:clone(state)};
     const petSyncRecord=state.runtimeMeta?.battlePetExitStateTransactions?.[petSyncTx];
     if(!isObject(petSyncRecord))return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-state-transaction-not-found',petExitStateTransactionId:petSyncTx,state:clone(state)};
     if(String(petSyncRecord.settlementReceiptId??'').trim()!==String(plan.settlementReceiptId??'').trim())return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-settlement-mismatch',petExitStateTransactionId:petSyncTx,state:clone(state)};
     if(String(petSyncRecord.playerExitTransactionId??'').trim()!==playerExit.transactionId)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-player-order-mismatch',petExitStateTransactionId:petSyncTx,state:clone(state)};
-    if(intOr(petSyncRecord.revisionBefore,null)!==currentRevision)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-revision-current-mismatch',petExitStateTransactionId:petSyncTx,state:clone(state)};
+    if(intOr(petSyncRecord.revisionBefore,null)!==playerExitRevision)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-player-revision-mismatch',petExitStateTransactionId:petSyncTx,state:clone(state)};
+    if(intOr(petSyncRecord.revisionAfter,null)!==currentRevision)return {ok:false,handled:false,stage:'battle-exit-commit',reason:'pet-exit-revision-current-mismatch',petExitStateTransactionId:petSyncTx,state:clone(state)};
   }
 
   const next=clone(state);
