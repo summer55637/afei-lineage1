@@ -7,9 +7,10 @@
   },
   "contract":{
     "startRevision":"captured from Persistent State by Finish Commit",
-    "requiredBranches":"dpbattle=1 requires DuelPoint; ordinary live PVE requires LevelUp/EXP; carried items present in live Player entry require Item",
+    "requiredBranches":"dpbattle=1 requires DuelPoint; ordinary live PVE requires LevelUp/EXP; carried items present in live Player entry require Item; sourceDeathExtraEvents present requires deathExtra",
     "transactionWindow":"each referenced reward transaction must have revisionAfter > settlementStartRevision and <= current state revision",
     "idempotency":"runtimeMeta.battleSettlementReceipts[settlementId]",
+    "deathExtraTransaction":"runtimeMeta.battleDeathExtraTransactions[transactionId] when sourceDeathExtraEvents are present",
     "rewardAppliedGate":"when a Battle Context is live, IDLE REWARD_APPLIED requires a receipt matching the live battle"
   },
   "notIncluded":[
