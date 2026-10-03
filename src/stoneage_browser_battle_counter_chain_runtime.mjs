@@ -40,6 +40,11 @@ async function resolveCounterChain(context,{
   counterRolls=[],
   counterAttackRolls=[],
   weaponClassByBid={},
+  carriedLootItemsByEnemyBid={},
+  carriedLootOwnerRollsByEnemyBid={},
+  carriedLootReplaceRollsByEnemyBid={},
+  carriedLootReplaceSlotRollsByEnemyBid={},
+  ridePetBidByParticipantBid={},
   now=null,
   transactionPrefix=''
 }={},runtimes={}){
