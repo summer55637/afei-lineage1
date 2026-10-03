@@ -90,6 +90,7 @@ const counterChainRuntime=createBrowserBattleCounterChainRuntime({
   damagePlanRuntime,
   criticalDamageRuntime,
   damageReactRuntime,
+  damageReactCommitRuntime,
   damageDeathChainRuntime
 });
 const roundRuntime=createBrowserBattleRoundRuntime({
