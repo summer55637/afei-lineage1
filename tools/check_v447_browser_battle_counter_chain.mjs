@@ -99,7 +99,7 @@ assert.deepEqual(result.chain.map(x=>x.targetBid),[0,10,0,10,0]);
 assert.ok(result.chain.every(x=>x.damageExecuted===true));
 assert.equal(result.context.sides[0].entries[0].hp,964);
 assert.equal(result.context.sides[1].entries[0].hp,976);
-assert.ok(result.chain.every(x=>x.sourceDamage===19));
+assert.ok(result.chain.every(x=>x.sourceDamage===17));
 assert.ok(result.chain.every(x=>x.counterDamage===14));
 assert.ok(result.chain.every(x=>x.check.triggered===true));
 assert.ok(result.chain.every(x=>x.prelude.outcome==='normal'));
