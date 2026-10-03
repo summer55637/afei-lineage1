@@ -1,0 +1,51 @@
+{
+  "format": "stoneage-ro0000-ride-endpoint-audit-v1",
+  "updated": "2026-10-03",
+  "source": {
+    "dataPath": "ro0000/server/merged-source/gmsv/data/ride.txt",
+    "hydataPath": "ro0000/server/merged-source/gmsv/hydata/data/ride.txt",
+    "dataHydataIdentical": true,
+    "columns": 64,
+    "dataRows": 13
+  },
+  "mapping": {
+    "headerIndices": "00-63",
+    "riderColumnsDisabled": [
+      0,
+      15,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63
+    ],
+    "characterVisualRows": 12,
+    "characterRows": "6 male appearance groups + 6 female appearance groups",
+    "enabledCells": "rider row 57; each character appearance row 59"
+  },
+  "fixedSemantics": {
+    "source": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "ridePetCodes": {
+      "RIDE_PET0": 100374,
+      "RIDE_PET1": 100358,
+      "RIDE_PET2": 100362,
+      "RIDE_PET3": 100279,
+      "RIDE_PET4": 100288,
+      "RIDE_PET5": 100283,
+      "RIDE_PET6": 100346,
+      "RIDE_PET7": 100310,
+      "RIDE_PET8": 100372,
+      "RIDE_PET9": 100373,
+      "RIDE_PET10": 101532,
+      "RIDE_PET11": 101576
+    },
+    "hardcodedRuntimeFunctions": "RIDEPET_getPETindex(pet base image, learnCode) and RIDEPET_getRIDEno(character appearance index, direction/animation index)",
+    "persistentFields": [
+      "CHAR_RIDEPET",
+      "CHAR_LEARNRIDE"
+    ]
+  },
+  "status": "visual_mapping_source_closed_but_ride_txt_runtime_loader_unproven",
+  "policy": "Preserve endpoint table; do not replace with Fixed-C hardcoded images."
+}
