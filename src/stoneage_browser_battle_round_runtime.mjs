@@ -657,6 +657,78 @@ async function resolveBattleRound(context,{
       attackRecord.damageReactPlan=clone(reactPlan);
       attackRecord.commit=clone(deathCommit);
       attackRecord.damageExecuted=deathCommit.damageExecuted===true;
+
+      const profitCredit=runtimes.profitCreditRuntime.apply(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {
+          attackerBids:[actorBid],
+          allowPlayerCredit:actorBid<10,
+          allowCommittedDeath:true,
+          hitIndex:attacks.length,
+          source:'round-basic-attack',
+          transactionPrefix:String(id)+':'+String(actorBid)+':basic',
+          deathExtraRandomRollsByBid,
+          defaultPetBidByPlayerBid,
+          now
+        }
+      );
+      if(!profitCredit.ok){
+        return {...profitCredit,stage:'battle-round-profit-credit',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)};
+      }
+      next.context=clone(profitCredit.context);
+      attackRecord.profitCredit=clone(profitCredit);
+
+      const creditEvent=Array.isArray(profitCredit.newCredits)
+        ? profitCredit.newCredits.find(x=>x?.enemyBid===prelude.finalTargetBid)
+        : null;
+      const carriedItems=carriedLootItemsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootItemsByEnemyBid?.[prelude.finalTargetBid]??null;
+      let carriedLoot=null;
+      if(creditEvent&&Array.isArray(carriedItems)){
+        carriedLoot=await runtimes.carriedLootRuntime.queue(
+          {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+          {
+            enemyBid:prelude.finalTargetBid,
+            ownerBids:creditEvent.creditBids??[],
+            items:carriedItems,
+            ownerRolls:carriedLootOwnerRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootOwnerRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+            replaceRolls:carriedLootReplaceRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+            replaceSlotRolls:carriedLootReplaceSlotRollsByEnemyBid?.[String(prelude.finalTargetBid)]??carriedLootReplaceSlotRollsByEnemyBid?.[prelude.finalTargetBid]??[],
+            transactionPrefix:String(id)+':'+String(actorBid)+':basic',
+            now
+          }
+        );
+        if(!carriedLoot.ok)return {...carriedLoot,stage:'battle-round-carried-loot',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)};
+        next.context=clone(carriedLoot.context);
+      }
+      attackRecord.carriedLoot=carriedLoot;
+
+      let enemyExpCredit=null;
+      if(creditEvent){
+        enemyExpCredit=runtimes.enemyExpRuntime.credit(
+          {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+          {
+            enemyBid:creditEvent.enemyBid,
+            participantBids:creditEvent.creditBids??[],
+            ridePetBidByParticipantBid,
+            hitIndex:attacks.length,
+            source:'round-basic-attack',
+            transactionPrefix:String(id)+':'+String(actorBid)+':basic',
+            now
+          }
+        );
+        if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-round-enemy-exp',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)};
+        next.context=clone(enemyExpCredit.context);
+      }
+      attackRecord.enemyExpCredit=enemyExpCredit;
+
+      const relife=runtimes.relifeRuntime.apply(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {trigger:'outer-add-profit-round-basic',now}
+      );
+      if(!relife.ok)return {...relife,stage:'battle-round-relife',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)};
+      next.context=clone(relife.context);
+      attackRecord.relife=clone(relife);
+
       const canResolveCounter=normalizedCounterPolicy==='execute'
         && prelude.outcome==='normal'
         && deathCommit.deathCommitted!==true
