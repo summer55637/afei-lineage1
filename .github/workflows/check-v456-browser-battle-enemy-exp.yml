@@ -1,0 +1,39 @@
+name: Check V4.56 browser battle enemy EXP credit
+on:
+  push:
+    paths:
+      - 'src/stoneage_browser_battle_enemy_exp_runtime.mjs'
+      - 'src/stoneage_browser_battle_carried_loot_runtime.mjs'
+      - 'src/stoneage_browser_battle_profit_credit_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v456_browser_battle_enemy_exp.mjs'
+      - 'tools/check_v456_browser_battle_enemy_exp_attack_sequence.mjs'
+      - '.github/workflows/check-v456-browser-battle-enemy-exp.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run V4.56 enemy EXP runtime regression
+        run: node tools/check_v456_browser_battle_enemy_exp.mjs
+      - name: Run V4.56 attack sequence EXP integration regression
+        run: node tools/check_v456_browser_battle_enemy_exp_attack_sequence.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_enemy_exp_runtime.mjs
+          node --check src/stoneage_browser_battle_carried_loot_runtime.mjs
+          node --check src/stoneage_browser_battle_profit_credit_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v456_browser_battle_enemy_exp.mjs
+          node --check tools/check_v456_browser_battle_enemy_exp_attack_sequence.mjs
