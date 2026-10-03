@@ -1,3 +1,12 @@
+## 2026-10-04 V4.79 Browser Idle Supply WindowHealer
+
+把 V4.78 抵達醫院 WindowHealer interaction position 的結果接到實際恢復交易：`NPC_WINDOW_HEALER_USE → supply policy re-check → IDLE_EVENTS.SUPPLY_DONE → MOVING`。
+
+V4.79 不設定 supply threshold，也不自動決定是否付費；仍由 caller 明確提供 `policy.supply` 與 `confirm`。WindowHealer 交易成功後才可提交 `SUPPLY_DONE`，Persistent State schema 不變。
+
+Regression：`tools/check_v479_browser_idle_supply_window_healer.mjs`；Workflow：`.github/workflows/check-v479-browser-idle-supply-window-healer.yml`。
+
+---
 ## 2026-10-04 V4.78 Browser Idle Supply Return Route Execution
 
 把 V4.77 的唯讀 supply return plan 接到正式執行邊界：沿 plan 的 4-neighbor movePath 逐格呼叫既有 `WORLD_MOVE_STEP`，到 exact source portal 再呼叫既有 `WORLD_WARPPOINT_EXECUTE`；三段完成後停在 WindowHealer interaction range 內，等待既有 `NPC_WINDOW_HEALER_USE`。
