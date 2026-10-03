@@ -102,3 +102,46 @@ Fixed-C 的 `npc_freepetskillshop.c` 也已解析，包含寵物特殊技能條�
 
 這批資料對「完整恢復所有原版 encounter coverage」仍有價值，尤其是 100／200／300／400 四個核心世界；但它們目前沒有阻塞首條放置主線，因首條閉合路線使用的 Encounter 65／28／91／95 已完成 source-backed closure。
 
+
+
+## 2026-10-03 單機 Item／PetSkill 解析
+
+### 新玩家出生道具
+
+RO0000 `setup.cf` 實際配置了 15 個新玩家 Item：
+
+`32003, 32004, 32005, 32006, 32007, 32013, 32008, 32009, 32010, 32011, 32160, 22407, 22077, 32419, 32420`。
+
+對 endpoint `itemset6.csv` 做完整 exact numeric scan 後，**15 個 ID 全部為 0 次**。
+
+Pinned Fixed-C 的新玩家建立流程已核對：`CHAR_loginAddItemForNew()` 在 `_HELP_NEWHAND` 下對 15 個 slot 逐一呼叫 `getNewplayergiveitem(i)`；成功值會直接進 `ITEM_makeItemAndRegist()`，再經 `ITEM_CHECKITEMTABLE()` 判斷 Item 是否存在。Item 建立失敗時不會插入玩家背包。
+
+因此 RO0000 endpoint 的「15 個出生 Item 設定」與目前部署 Item table 之間是一個**已知且可精確描述的 source boundary**：目前 snapshot 沒有 source-backed successful starter-item grant。不能把 Fixed-C 的 24114 或其他 Item image number 當成替代品。
+
+### 寵物技能
+
+RO0000 `setup.cf` 的 active skill file 是：
+
+`./data/petskill2.txt`
+
+因此單機版的 endpoint-primary 寵物技能資料應以：
+
+`ro0000/server/merged-source/gmsv/data/petskill2.txt`
+
+為準，不以 hydata 覆蓋。
+
+已確認最明顯的 gameplay variant：
+
+- Skill 652「暴虐-背水之戰」：endpoint data = `攻+58%、防-45%`
+- hydata = `攻+55%、防-45%`
+
+`skillcode.txt` 同樣會直接被 Fixed-C 的 `Load_PetSkillCodes()` 以 `./data/skillcode.txt` 載入，並將 `name / TempNo / PetId / Code` 寫入 `Code_skill[]`；而 `Code` 會參與特殊寵物技能資格判定。因此它是實際 gameplay data，不是單純 UI 文本。RO0000 data 有 158 行、hydata 有 160 行，兩端各存在多筆 variant，後續維持 data-primary、variant 保留。
+
+### GMQUE／抓寵活動
+
+重新掃描 RO0000 endpoint 的 `gmsv/data/npc` 共 2,384 個檔案，沒有找到 `RANDGMQUE` / `QUEPART0` 等正式 endpoint task-argument source。這表示目前不能從 RO0000 建立實際活動任務內容；Fixed-C 的 parser／reward engine semantics 已解析，但沒有 endpoint authoritative task payload 就不進行猜測。
+
+詳細結果另存於：
+
+`data/generated/stoneage_ro0000_singleplayer_item_skill_closure.json`
+
