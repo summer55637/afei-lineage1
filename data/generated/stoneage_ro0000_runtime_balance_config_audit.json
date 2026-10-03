@@ -1,0 +1,32 @@
+{
+  "format": "stoneage-ro0000-runtime-balance-config-audit-v1",
+  "updated": "2026-10-03",
+  "source": "ro0000/server/merged-source/gmsv/setup.cf",
+  "values": {
+    "BATTLEALLEXPBASE": "60",
+    "BATTLECOMEXPBASE": "0,0,20,20,50,50,70,70,100,100",
+    "BATTLERANDDEX": "3",
+    "BATTLERANDDEX2": "10",
+    "BATTLESPEED": "5000",
+    "battletime": "500",
+    "PETUPGETEXP": "0",
+    "PETTRANSABILITY": "0",
+    "PETTRANSABILITY1": "370",
+    "PETTRANSABILITY2": "200",
+    "BATTLEGETITEMRATE": "-1",
+    "BATTLEGETITEMRATEMAP": "0"
+  },
+  "scopeInterpretation": {
+    "gameplayRelevance": [
+      "battle EXP base",
+      "battle command EXP base",
+      "battle random dex settings",
+      "battle timing",
+      "pet growth/EXP mode",
+      "pet transmigration ability limits",
+      "battle item-drop rate/map policy"
+    ],
+    "evidenceLevel": "configuration fact only where a dedicated Fixed-C getter/use site was not found by current source index",
+    "policy": "Preserve exact RO0000 deployment values; do not substitute Fixed-C defaults."
+  }
+}
