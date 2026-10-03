@@ -178,17 +178,17 @@
         {
           "start": "0x00",
           "endExclusive": "0x0c",
-          "status": "not assigned by the inspected getters; other loader/render accesses may use these bytes"
+          "status": "not exposed by the inspected getters; target AdrnInit and realGetImage separately establish bitmapno, adder, and size at offsets 0x00, 0x04, and 0x08"
         },
         {
           "start": "0x22",
           "endExclusive": "0x40",
-          "status": "not mapped by the inspected getters"
+          "status": "not mapped by the inspected target getters; source-only member-name candidates are listed under crossSourceFieldLayout"
         },
         {
           "start": "0x44",
           "endExclusive": "0x50",
-          "status": "not mapped by the inspected getters"
+          "status": "not exposed by the inspected getters; source-only damy fields and alignment padding are candidates, while target AdrnInit separately uses attr.bmpnumber at 0x4c"
         }
       ]
     },
