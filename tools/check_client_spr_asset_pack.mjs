@@ -108,7 +108,8 @@ assert.equal(resolvedFrame.width,1);
 assert.equal(resolvedFrame.height,1);
 assert.deepEqual([...resolvedFrame.pixels],[0x5a]);
 assert.deepEqual(resolvedFrame.frameOffset,{x:0,y:0});
-assert.equal(resolvedFrame.soundNo,24);
+assert.equal(resolvedFrame.soundNo,0);
+assert.equal(resolved.animation.frames[4].soundNo,24);
 assert.equal((await resolveClientSpriteFrameAsync(pack,100382,0,14)).status,'missing-frame');
 assert.equal((await resolveClientSpriteFrameAsync(pack,100382,0,-1)).status,'invalid-frame-reference');
 assert.deepEqual(resolved.animation.frames.map(frame=>frame.bmpNo),
