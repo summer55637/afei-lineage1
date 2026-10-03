@@ -115,7 +115,7 @@ const makePlan=(reactionCode,extra={})=>{
 const conflictCtx=makePlan(BATTLE_MD_REFLEC);
 const first=commitRuntime.commit(conflictCtx.ctx,{damageReactPlan:conflictCtx.plan,transactionId:'v448-conflict',expectedDamageRevision:0});
 assert.equal(first.ok,true,JSON.stringify(first));
-const secondPlan={...conflictCtx.plan,requestedDamage:21};
+const secondPlan={...conflictCtx.plan,requestedDamage:21,damageCommitRevision:1};
 const conflict=commitRuntime.commit(first.battleContext,{damageReactPlan:secondPlan,transactionId:'v448-conflict',expectedDamageRevision:1});
 assert.equal(conflict.ok,false);
 assert.equal(conflict.reason,'damage-react-transaction-conflict');
