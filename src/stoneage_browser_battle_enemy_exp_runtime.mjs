@@ -55,7 +55,8 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],ridePetBidByPa
   if(!context?.context)return {ok:false,handled:false,stage:'battle-enemy-exp',action:ACTION_BATTLE_ENEMY_EXP_CREDIT,reason:'battle-context-required'};
   const eBid=int(enemyBid),enemy=findEntry(context,eBid);
   if(eBid==null||eBid<10||!enemy)return {ok:false,handled:false,stage:'battle-enemy-exp',action:ACTION_BATTLE_ENEMY_EXP_CREDIT,reason:'enemy-entry-required'};
-  if(enemy.sourceExpCreditProcessed===true)return {ok:true,handled:true,stage:'battle-enemy-exp-idempotent',format:BROWSER_BATTLE_ENEMY_EXP_RUNTIME_FORMAT,action:ACTION_BATTLE_ENEMY_EXP_CREDIT,enemyBid:eBid,idempotent:true,rngConsumed:0,newCredits:[],context:clone(context.context),persistentMutation:false};
+  const processedEnemyBids=Array.isArray(context.context.sourceEnemyExpCreditEnemyBids)?context.context.sourceEnemyExpCreditEnemyBids.map(int).filter(x=>x!=null):[];
+  if(enemy.sourceExpCreditProcessed===true||processedEnemyBids.includes(eBid))return {ok:true,handled:true,stage:'battle-enemy-exp-idempotent',format:BROWSER_BATTLE_ENEMY_EXP_RUNTIME_FORMAT,action:ACTION_BATTLE_ENEMY_EXP_CREDIT,enemyBid:eBid,idempotent:true,rngConsumed:0,newCredits:[],context:clone(context.context),persistentMutation:false};
   if(enemy.isDie!==true&&enemy.dead!==true&&!(int(enemy.hp)!=null&&int(enemy.hp)<=0))return {ok:true,handled:true,stage:'battle-enemy-exp-not-dead',format:BROWSER_BATTLE_ENEMY_EXP_RUNTIME_FORMAT,action:ACTION_BATTLE_ENEMY_EXP_CREDIT,enemyBid:eBid,idempotent:false,newCredits:[],rngConsumed:0,context:clone(context.context),persistentMutation:false};
 
   const resolved=enemyExpOverride!=null?{ok:true,exp:Math.max(1,int(enemyExpOverride)??1),method:'explicit-source-exp'}:resolveEnemyExp(enemy);
@@ -99,6 +100,9 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],ridePetBidByPa
   enemyNext.sourceExpCreditProcessed=true;
   enemyNext.sourceExpCreditParticipants=bids.slice();
   enemyNext.sourceEnemyExpResolved=resolved.exp;
+  const processedBids=Array.isArray(next.context.sourceEnemyExpCreditEnemyBids)?next.context.sourceEnemyExpCreditEnemyBids.map(int).filter(x=>x!=null):[];
+  if(!processedBids.includes(eBid))processedBids.push(eBid);
+  next.context.sourceEnemyExpCreditEnemyBids=processedBids;
   const events=Array.isArray(next.context.sourceEnemyExpCreditEvents)?next.context.sourceEnemyExpCreditEvents.slice():[];
   events.push(...credits.map(x=>({...x,hitIndex:int(hitIndex),source:String(source??'attack').trim()||'attack'})));
   next.context.sourceEnemyExpCreditEvents=events;
