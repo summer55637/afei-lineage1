@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createBrowserBattleProfitCreditRuntime } from '../src/stoneage_browser_battle_profit_credit_runtime.mjs';
+import { createBrowserBattleCarriedLootRuntime } from '../src/stoneage_browser_battle_carried_loot_runtime.mjs';
+import { createBrowserBattleEnemyExpRuntime } from '../src/stoneage_browser_battle_enemy_exp_runtime.mjs';
+import { createBrowserBattleRelifeRuntime } from '../src/stoneage_browser_battle_relife_runtime.mjs';
 import { createBrowserBattleRoundRuntime } from '../src/stoneage_browser_battle_round_runtime.mjs';
 import { createBrowserBattleAttackCountRuntime } from '../src/stoneage_browser_battle_attack_count_runtime.mjs';
 import { createBrowserBattleTargetListRuntime } from '../src/stoneage_browser_battle_target_list_runtime.mjs';
@@ -71,6 +74,9 @@ const context={
 const attackCountRuntime=createBrowserBattleAttackCountRuntime();
 const targetListRuntime=createBrowserBattleTargetListRuntime();
 const profitCreditRuntime=createBrowserBattleProfitCreditRuntime();
+const carriedLootRuntime=createBrowserBattleCarriedLootRuntime();
+const enemyExpRuntime=createBrowserBattleEnemyExpRuntime();
+const relifeRuntime=createBrowserBattleRelifeRuntime();
 const attackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
 const attackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
 const damagePlanRuntime=createBrowserBattleDamagePlanRuntime();
@@ -86,7 +92,10 @@ const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
   criticalDamageRuntime,
   damageReactRuntime,
   damageReactCommitRuntime,
-  damageDeathChainRuntime
+  damageDeathChainRuntime,
+  carriedLootRuntime,
+  enemyExpRuntime,
+  relifeRuntime
 });
 const counterRuntime=createBrowserBattleCounterRuntime();
 const counterChainRuntime=createBrowserBattleCounterChainRuntime({
@@ -97,7 +106,10 @@ const counterChainRuntime=createBrowserBattleCounterChainRuntime({
   criticalDamageRuntime,
   damageReactRuntime,
   damageReactCommitRuntime,
-  damageDeathChainRuntime
+  damageDeathChainRuntime,
+  carriedLootRuntime,
+  enemyExpRuntime,
+  relifeRuntime
 });
 const statusRuntime=createBrowserBattleStatusRuntime();
 const endRuntime=createBrowserBattleEndRuntime();
