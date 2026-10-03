@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { createBrowserBattleEnemyExpRuntime } from '../src/stoneage_browser_battle_enemy_exp_runtime.mjs';
 import { createBrowserBattleProfitCreditRuntime } from '../src/stoneage_browser_battle_profit_credit_runtime.mjs';
 import { createBrowserBattleCarriedLootRuntime } from '../src/stoneage_browser_battle_carried_loot_runtime.mjs';
+import { createBrowserBattleEnemyExpRuntime } from '../src/stoneage_browser_battle_enemy_exp_runtime.mjs';
+import { createBrowserBattleRelifeRuntime } from '../src/stoneage_browser_battle_relife_runtime.mjs';
+import { createBrowserBattleCarriedLootRuntime } from '../src/stoneage_browser_battle_carried_loot_runtime.mjs';
 import { createBrowserBattleAttackSequenceRuntime } from '../src/stoneage_browser_battle_attack_sequence_runtime.mjs';
 import { createBrowserBattleAttackPreflightRuntime } from '../src/stoneage_browser_battle_attack_preflight_runtime.mjs';
 import { createBrowserBattleAttackSeqPreludeRuntime } from '../src/stoneage_browser_battle_attack_seq_prelude_runtime.mjs';
@@ -42,6 +45,9 @@ const ctx={format:'stoneage-browser-battle-context-runtime-v1',context:{
 }};
 
 const profitCreditRuntime=createBrowserBattleProfitCreditRuntime();
+const carriedLootRuntime=createBrowserBattleCarriedLootRuntime();
+const enemyExpRuntime=createBrowserBattleEnemyExpRuntime();
+const relifeRuntime=createBrowserBattleRelifeRuntime();
 const carriedLootRuntime=createBrowserBattleCarriedLootRuntime();
 const enemyExpRuntime=createBrowserBattleEnemyExpRuntime();
 const attackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
