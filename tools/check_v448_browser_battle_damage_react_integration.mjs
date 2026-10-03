@@ -29,17 +29,8 @@ const makeEntry=(bid,sourceType)=>({
 
 const runtimeSet=()=>{
   const attackCountRuntime=createBrowserBattleAttackCountRuntime();
-const targetListRuntime=createBrowserBattleTargetListRuntime();
-const counterRuntime=createBrowserBattleCounterRuntime();
-const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
-  attackPreflightRuntime,
-  attackSeqPreludeRuntime,
-  damagePlanRuntime,
-  criticalDamageRuntime,
-  damageReactRuntime,
-  damageReactCommitRuntime,
-  damageDeathChainRuntime
-});
+  const targetListRuntime=createBrowserBattleTargetListRuntime();
+  const counterRuntime=createBrowserBattleCounterRuntime();
   const attackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
   const attackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
   const damagePlanRuntime=createBrowserBattleDamagePlanRuntime();
@@ -47,6 +38,15 @@ const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
   const damageReactRuntime=createBrowserBattleDamageReactRuntime();
   const damageReactCommitRuntime=createBrowserBattleDamageReactCommitRuntime();
   const damageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
+  const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
+    attackPreflightRuntime,
+    attackSeqPreludeRuntime,
+    damagePlanRuntime,
+    criticalDamageRuntime,
+    damageReactRuntime,
+    damageReactCommitRuntime,
+    damageDeathChainRuntime
+  });
   const statusRuntime=createBrowserBattleStatusRuntime();
   const endRuntime=createBrowserBattleEndRuntime();
   const counterChainRuntime=createBrowserBattleCounterChainRuntime({
