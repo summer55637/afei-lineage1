@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b1716a3 — [docs] refresh Android APK analysis status
-- 更新時間：2026-10-03T09:58:19+08:00
+- 最新 commit：7498a99 — [audit] publish Android secondary resource/JNI evidence
+- 更新時間：2026-10-03T10:04:20+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
