@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：5656117 — docs: refine RO0000 pet skill shop binding audit
-- 更新時間：2026-10-03T16:11:41+08:00
+- 最新 commit：cade7c4 — docs: strengthen RO0000 ride runtime closure
+- 更新時間：2026-10-03T16:12:57+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
