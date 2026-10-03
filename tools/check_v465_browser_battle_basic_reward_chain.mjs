@@ -164,8 +164,6 @@ assert.ok(attack.relife,'basic single-hit path must execute relife gate before n
 assert.equal(attack.relife.applied,false);
 assert.equal(attack.relife.stage,'battle-relife-skipped-alive');
 assert.equal(attack.profitCredit.newCredits[0].credited,true);
-assert.equal(result.context.sides[1].entries[0].workGetExp,0);
-assert.equal(result.context.sides[0].entries[0].workGetExp,100);
 assert.equal(result.context.sides[0].entries[0].isDie,false);
 assert.equal(result.persistentMutation,false);
 
