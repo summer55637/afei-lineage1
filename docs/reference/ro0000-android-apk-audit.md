@@ -739,3 +739,17 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_recei
 這層現在已足以支援 browser battle runtime 直接還原 BC participant 的 hp/maxHp/level/graphic/ride-pet/status state，不必再把 BC 封包當成黑盒字串。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_status_decode_contract.json`。
+
+
+## Battle BC object-effect attachment
+
+BC participant records 還有兩個 target-native 的 effect 欄位：
+
+- `ACTION+0xd1c` 由 BC stream 解析後，若 > 0，呼叫 `set_obj_effect(action,value)`。
+- `ACTION+0xd20` 若 > 0，呼叫 `set_obj_effect1(action,value)`。
+- target x86 的 `set_obj_effect` 位於 `0x33f2b0`，會檢查來源角色 `ACTION+0x11c` 空閒且 hp > 0；建立新的 effect ACTION 後，把輸入 effect number 寫到新 ACTION `+0x180`，再把 effect ACTION 掛到來源 `+0x11c`。
+- `set_obj_effect1` 位於 `0x33f3a0`，對應第二個 attachment slot `+0x120`，其建立路徑與第一個 effect slot 相同，但使用另一個 target-native 的 ACTION `+0x08` 初始化值。
+- 兩個建立路徑都觀察到固定的 `GetAction(0x47,0x264)` 輸入，以及建立後對來源/效果 ACTION 的 byte `+0x15` 做遞減。
+- 因此 `0xd1c/0xd20` 現在可安全視為「BC 指定的兩個特殊 object-effect attachment channel」，而不是普通 battle stat。effect number 的最終圖像/特效資源對應仍要等 production resource bytes 或進一步 runtime verification。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_object_effect_contract.json`。
