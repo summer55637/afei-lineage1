@@ -1,8 +1,39 @@
 {
-  "format": "stoneage-public-group-provenance-audit-v2",
+  "format": "stoneage-public-group-provenance-audit-v3",
   "checkedDate": "2026-10-03",
   "purpose": "Public-web provenance search for the 30 active Encounter->Group references unresolved in the RO0000 endpoint snapshot.",
-  "targetGroupIds": [1,196,200,791,792,793,794,795,796,797,800,802,804,805,806,808,809,811,821,823,824,826,827,1131,1315,1316,1327,1328,1467,1500],
+  "targetGroupIds": [
+    1,
+    196,
+    200,
+    791,
+    792,
+    793,
+    794,
+    795,
+    796,
+    797,
+    800,
+    802,
+    804,
+    805,
+    806,
+    808,
+    809,
+    811,
+    821,
+    823,
+    824,
+    826,
+    827,
+    1131,
+    1315,
+    1316,
+    1327,
+    1328,
+    1467,
+    1500
+  ],
   "searchPolicy": {
     "publicSourcesAllowed": true,
     "promoteOnlyWithProvenance": true,
@@ -88,6 +119,26 @@
       "url": "https://lab.welovesa.com/viewthread.php?tid=2429",
       "buildNote": "Public 2013 runtime log identifies SA GMSV 8.0 for sa_8002 and reports '有效遇敌组群数是 1230'.",
       "targetResult": "Useful version/runtime corroboration only; no Group rows exposed."
+    },
+    {
+      "source": "GitHub StoneAge 8.0 exact-blob clone family",
+      "repositories": [
+        "alrightlook/StoneAge",
+        "BloodShow/StoneAge",
+        "gamefunc/StoneAge",
+        "stevencoey/StoneAge",
+        "FuZhouhao/StoneAge",
+        "kyonlu/StoneAge",
+        "moiquetyrell/StoneAge",
+        "comsa33/StoneAge",
+        "shencw2/StoneAge",
+        "sihyeonk/StoneAge"
+      ],
+      "filePath": "gmsv/data/group1.txt",
+      "fixedBlobSha": "1be75eb3e56ab16d4b433146ec59538ad651c874",
+      "exactBlobMatch": true,
+      "targetRowsObserved": "1131, 1467, 1500 are present in this exact Fixed-C group1 blob; no additional target IDs were found.",
+      "significance": "These public forks are exact copies of the pinned Fixed-C group1.txt, so they independently corroborate the provenance of the three rows already present in Fixed-C. They do not provide new definitions for the remaining 28 target IDs."
     }
   ],
   "publiclyObservedTargetRows": [
@@ -126,14 +177,31 @@
   ],
   "coverageSummary": {
     "targetIds": 30,
-    "publicSourcesChecked": 11,
-    "historicallyObservedTargetIds": [1131,1500],
+    "publicSourcesChecked": 12,
+    "historicallyObservedTargetIds": [
+      1131,
+      1500
+    ],
     "targetIdsStillWithoutPublicGroupRow": 28,
-    "coreWorldTargetIdsStillWithoutPublicGroupRow": [791,792,793,794,800,808,809,811,824,827,1315,1316],
-    "status": "open-provenance-search"
+    "coreWorldTargetIdsStillWithoutPublicGroupRow": [
+      791,
+      792,
+      793,
+      794,
+      800,
+      808,
+      809,
+      811,
+      824,
+      827,
+      1315,
+      1316
+    ],
+    "status": "open-provenance-search",
+    "exactFixedBlobCloneRepositories": 10
   },
   "conclusion": {
-    "whatChanged": "This round found two additional GitHub repositories in the same GMSV family and several 2012-2013 archive/index records that point to older Windows/Linux StoneAge data packages. None exposed a trustworthy row for the 28 unresolved target IDs.",
+    "whatChanged": "This round found additional exact-blob StoneAge 8.0 GitHub clones of the pinned Fixed-C group1.txt, plus older 2012-2013 archive/index records. The clone family corroborates the 1131/1467/1500 rows but adds no new definitions for the remaining 28 target IDs.",
     "safePromotion": "No target Group row is promoted into RO0000 runtime from public sources in this audit.",
     "nextSearchPriority": "The most promising unresolved leads are the older 2012 WIN6.0.rar package, the 2012 shiqi8.0 package, and the 2013 凌宇阁 WIN data lineage referenced by We Love SA. Continue toward mirrors or publicly indexed copies of those exact archives rather than generic Group files.",
     "reopenPromotionCondition": "Promote only when an authoritative or strongly compatible revision provides a complete column-verifiable Group row and provenance linking it to the target RO0000 deployment/variant."
