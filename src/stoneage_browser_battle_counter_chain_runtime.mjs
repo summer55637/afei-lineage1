@@ -251,6 +251,17 @@ async function resolveCounterChain(context,{
         next.context=clone(carriedLoot.context);
       }
       record.carriedLoot=carriedLoot;
+      let enemyExpCredit=null;
+      if(creditEvent){
+        if(!runtimes.enemyExpRuntime||runtimes.enemyExpRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,reason:'enemy-exp-runtime-required'};
+        enemyExpCredit=runtimes.enemyExpRuntime.credit(
+          {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+          {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],hitIndex:step,source:'counter-special-react',transactionPrefix:transactionPrefix||'counter',now}
+        );
+        if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+        next.context=clone(enemyExpCredit.context);
+      }
+      record.enemyExpCredit=enemyExpCredit;
       record.damageReactPlan=clone(reactPlan);
       record.commit=clone(commit);
       record.damageExecuted=commit.damageExecuted===true;
@@ -314,6 +325,17 @@ async function resolveCounterChain(context,{
       next.context=clone(carriedLoot.context);
     }
     record.carriedLoot=carriedLoot;
+    let enemyExpCredit=null;
+    if(creditEvent){
+      if(!runtimes.enemyExpRuntime||runtimes.enemyExpRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,reason:'enemy-exp-runtime-required'};
+      enemyExpCredit=runtimes.enemyExpRuntime.credit(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {enemyBid:creditEvent.enemyBid,participantBids:creditEvent.creditBids??[],hitIndex:step,source:'counter',transactionPrefix:transactionPrefix||'counter',now}
+      );
+      if(!enemyExpCredit.ok)return {...enemyExpCredit,stage:'battle-counter-chain-enemy-exp',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+      next.context=clone(enemyExpCredit.context);
+    }
+    record.enemyExpCredit=enemyExpCredit;
     record.damagePlan=clone(damagePlan);
     record.criticalPlan=clone(criticalPlan);
     record.damageReactPlan=clone(reactPlan);
@@ -368,6 +390,7 @@ function createBrowserBattleCounterChainRuntime({
   counterRuntime,
   profitCreditRuntime,
   carriedLootRuntime,
+  enemyExpRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
   criticalDamageRuntime,
