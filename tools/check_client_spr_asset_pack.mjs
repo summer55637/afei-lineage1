@@ -89,14 +89,14 @@ assert.equal(resolved.status,'ready');
 assert.equal(resolved.slot,382);
 assert.equal(resolved.animation.frameCount,14);
 assert.deepEqual(resolved.animation.frames.map(frame=>frame.bmpNo),
-  Array.from({length:14},(_,i)=>101+i));
+  Array.from({length:14},(_,i)=>201+i));
 assert.equal(resolveClientSpriteAnimation(pack,100999,0).status,'missing-sprite');
 assert.equal(resolveClientSpriteAnimation(pack,100382,100).status,'missing-animation');
 assert.equal(clientAssetPackSummary(pack).text.includes('SPR 2 隻'),true);
 
 const legacyManifest={...manifest,files:{adrn:{url:'adrn.bin'},real:{url:'real.bin'}}};
 const legacyPack=await loadClientAssetPack({
-  manifestUrl:'https://example.test/legacy.json',
+  manifestUrl:'https://example.test/client-assets/legacy.json',
   fetchFn:async url=>url.endsWith('/legacy.json')
     ?{ok:true,status:200,json:async()=>legacyManifest}
     :payloads[url]||{ok:false,status:404}
