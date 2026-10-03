@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：44243b7 — fix: align V4.68 pet exit plan format contract
-- 更新時間：2026-10-03T22:08:35+08:00
+- 最新 commit：c77e907 — [docs] auto-update README and endpoint evidence
+- 更新時間：2026-10-03T14:08:45Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.68
 - Playable HTML：⏸️ 尚未建立（刻意保留）
