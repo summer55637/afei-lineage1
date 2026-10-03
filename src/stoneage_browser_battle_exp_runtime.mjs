@@ -109,15 +109,19 @@ function planBattleExp(battleContext,state,{
     // Fixed-C awards battle EXP only to participants present in the active battle roster.
     if(!contextPet||contextPet.isDie===true)continue;
     const petWorkGetExp=intOr(contextPet?.workGetExp,persistentPetWorkGetExp);
-    if(petWorkGetExp<=0)continue;
+    const persistentVariableAiBefore=intOr(pet?.variableAi,0);
+    const variableAi=intOr(contextPet?.variableAi,persistentVariableAiBefore);
+    const variableAiChanged=variableAi!==persistentVariableAiBefore;
+    if(petWorkGetExp<=0&&!variableAiChanged)continue;
     petPlans.push({
       petId:id,
       level:intOr(contextPet?.level??pet.level,1),
       workGetExp:petWorkGetExp,
       persistentWorkGetExpBefore:persistentPetWorkGetExp,
       workGetExpSource:contextPet?.workGetExp!=null?'battle-context-transient':'persistent-state-fallback',
-      variableAi:intOr(contextPet?.variableAi,intOr(pet?.variableAi,0)),
-      persistentVariableAiBefore:intOr(pet?.variableAi,0),
+      variableAi,
+      persistentVariableAiBefore,
+      variableAiDelta:variableAi-persistentVariableAiBefore,
       variableAiSource:contextPet?.variableAi!=null?'battle-context-transient':'persistent-state-fallback',
       calculation:applyBattleExpFormula({
         workGetExp:petWorkGetExp,
