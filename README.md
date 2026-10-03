@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：bb7dfc0 — docs: record deathExtra settlement branch
-- 更新時間：2026-10-03T20:00:12+08:00
+- 最新 commit：dab9b02 — ci: rerun V4.62 on current main
+- 更新時間：2026-10-03T20:00:36+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.62
 - Playable HTML：⏸️ 尚未建立（刻意保留）
