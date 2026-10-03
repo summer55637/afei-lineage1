@@ -1,0 +1,30 @@
+name: Check V4.62 browser battle death-extra commit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_persistent_state.mjs'
+      - 'src/stoneage_browser_battle_death_extra_runtime.mjs'
+      - 'src/stoneage_browser_battle_death_extra_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_settlement_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v462_browser_battle_death_extra_commit.mjs'
+      - '.github/workflows/check-v462-browser-battle-death-extra-commit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.62 death-extra commit regression
+        run: node tools/check_v462_browser_battle_death_extra_commit.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_persistent_state.mjs
+          node --check src/stoneage_browser_battle_death_extra_runtime.mjs
+          node --check src/stoneage_browser_battle_death_extra_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_settlement_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v462_browser_battle_death_extra_commit.mjs
