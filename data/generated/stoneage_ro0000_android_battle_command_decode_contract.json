@@ -293,7 +293,9 @@
     "abiFunctionAddressesRecorded": true,
     "commandQueueAndParserStaticallyReviewed": true,
     "deviceRuntimeBattlePlaybackObserved": false,
-    "serverBattleFormulaVerifiedFromApk": false
+    "serverBattleFormulaVerifiedFromApk": false,
+    "damageNumberLifecycleStaticallyReviewed": true,
+    "damageNumberRenderingPartiallyMapped": true
   },
   "damageNumberVisual": {
     "creation": {
@@ -308,6 +310,51 @@
     "dispatch": {
       "function": "damage_dispx()",
       "behavior": "compares an ACTION function/name field against the damage-number callback pointer and dispatches matching ACTIONs to showDamage_num(action*) for display"
+    },
+    "lifecycle": {
+      "callback": "showDamage_num(action*)",
+      "workOffsets": {
+        "stateByte": "0x00",
+        "timerByte": "0x01",
+        "sourceActionPointer": "0x08"
+      },
+      "actionFields": {
+        "0x170": "Per-callback integer counter modified by the visible state machine; semantic struct name unresolved",
+        "0x174": "Set to 16 at state 0 -> 1; no further direct write observed in showDamage_num"
+      },
+      "initialization": "set_damage_num() initializes action+0x170 to 0x18 (24) and action+0xe0 to 2; the work state is obtained from GetAction allocation.",
+      "transitionGate": "State advancement is skipped when both the first observed global gate is nonzero and the low two bits of the second observed global word are nonzero. The meanings of these globals are unresolved; rendering paths remain reachable.",
+      "states": [
+        {
+          "workState": 0,
+          "perCallback": "subtract 2 from action+0x170",
+          "transition": "When action+0x170 becomes 0, set action+0x174=16 and work[0]=1."
+        },
+        {
+          "workState": 1,
+          "perCallback": "add 2 to action+0x170",
+          "transition": "When action+0x170 reaches or exceeds 24, set work[1]=60 and work[0]=2."
+        },
+        {
+          "workState": 2,
+          "perCallback": "set action+0x170=0 and decrement work[1] as a byte",
+          "transition": "When the decremented work[1] is 0, clear the related source action's +0xd10 field and call DeathAction() for the damage-number ACTION."
+        }
+      ],
+      "normalFrameTail": "After a non-expiry rendering path, call pattern(action,0,1). The expiry path calls DeathAction() and exits without reaching this normal tail.",
+      "verification": "The state-byte tests, counter steps (2), threshold (24), timer value (60), source cleanup field (+0xd10), and DeathAction() termination are directly visible in the target x86 instructions and corroborated by the ARMv7a Thumb instructions."
+    },
+    "rendering": {
+      "selector": "The work field at +0x130 selects target formatting/result-display branches; the callback builds one or more text buffers before dispatching to the damage-font renderer.",
+      "formattingBuffers": "The inspected path clears and writes fixed 0x100-byte stack buffers with sprintf; no explicit output-length guard was observed at these sites.",
+      "primaryRenderer": "stockFontNumToDamage() receives font number 101 (0x65). Depending on the selected branch it uses a fixed battle-font mode or the mode held at work+0x1ec; getFontNumWidthToDamage() is used in the centered-text paths.",
+      "secondaryRenderer": {
+        "work+0x238": "When nonzero, an additional text buffer is submitted with battle-font mode 2 at action.y+12.",
+        "work+0x234": "When equal to 1, an additional text buffer is measured and submitted at action.y+60."
+      },
+      "alternatePrimaryPath": "When work+0x244 equals 1, the primary text uses the alternate fixed-mode-3 path; otherwise the width-measured path is used.",
+      "auxiliaryDisplay": "When the related source action's +0xd10 field equals 2, the callback submits an additional StockDispBuffer callback at action.x+2, action.y-22. Its visual meaning is not assigned beyond the observed coordinates and condition.",
+      "boundary": "The callback's branch-specific strings, glyph rendering implementation and all special display combinations are not fully translated; the evidence records only the directly observed dispatch and positioning rules."
     }
   }
 }
