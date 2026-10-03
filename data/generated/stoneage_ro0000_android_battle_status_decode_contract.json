@@ -1,0 +1,222 @@
+{
+  "format": "ro0000-android-battle-status-decode-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隱盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "x86BuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+  },
+  "functions": {
+    "set_bc": {
+      "x86Address": "0x361680",
+      "endExclusive": "0x3623a3",
+      "observedRole": "decode current BattleStatus stream into p_party ACTION state"
+    },
+    "get_bc_num": {
+      "x86Address": "0x361140",
+      "behavior": "hex-stream integer parser over BattleStatus"
+    },
+    "get_bc_asc": {
+      "x86Address": "0x3612e0",
+      "behavior": "delimiter-terminated UTF-8/escaped string parser"
+    },
+    "get_bc_asc_ridepet": {
+      "x86Address": "0x3614d0",
+      "behavior": "delimiter-terminated ride-pet string parser into ACTION+0x1d8"
+    }
+  },
+  "bcRecordDecode": {
+    "header": {
+      "firstInteger": {
+        "destination": "local combat participant count stored into current master ACTION +0xe0",
+        "parser": "get_bc_num()"
+      }
+    },
+    "perParticipant": {
+      "index": {
+        "parser": "get_bc_num()",
+        "use": "lookup p_party participant pointer"
+      },
+      "name": {
+        "parser": "get_bc_asc(action,0)",
+        "destinationOffset": "0x38"
+      },
+      "freeNameOrTitle": {
+        "parser": "get_bc_asc(action,1)",
+        "destinationOffset": "0x78"
+      },
+      "characterGraphicNumber": {
+        "parser": "get_bc_num()",
+        "destinationOffset": "0x180"
+      },
+      "level": {
+        "parser": "get_bc_num()",
+        "destinationOffset": "0xc8"
+      },
+      "hp": {
+        "parser": "get_bc_num()",
+        "destinationOffset": "0xb8"
+      },
+      "maxHp": {
+        "parser": "get_bc_num()",
+        "destinationOffset": "0xbc"
+      },
+      "battleFlags": {
+        "parser": "get_bc_num()",
+        "storage": "local d0",
+        "downstream": "death, ride/pet, jujutsu/status, reverse and fade-out handling"
+      },
+      "rideState": {
+        "parser": "get_bc_num()",
+        "destinationOffset": "0x1d4",
+        "crossSourceLabel": "ATR_RIDE / ACTION.onRide"
+      },
+      "ridePetName": {
+        "parser": "get_bc_asc_ridepet(action)",
+        "destinationOffset": "0x1d8"
+      },
+      "ridePetLevel": {
+        "parser": "get_bc_num()",
+        "destinationOffset": "0x1ec"
+      },
+      "ridePetHp": {
+        "parser": "get_bc_num()",
+        "destinationOffset": "0x1f0"
+      },
+      "ridePetMaxHp": {
+        "parser": "get_bc_num()",
+        "destinationOffset": "0x1f4"
+      }
+    },
+    "targetSpecificExtraFields": {
+      "offset0xd1c": "integer parsed from BC stream; when >0 passed to set_obj_effect(action, value)",
+      "offset0xd20": "integer parsed from BC stream; when >0 passed to set_obj_effect1(action, value)"
+    }
+  },
+  "targetDirectStatusEffects": {
+    "bitFlags": {
+      "0x00000001": {
+        "label": "BC_FRESH cross-source",
+        "effect": "initial/fresh participant setup path"
+      },
+      "0x00000002": {
+        "label": "BC_DEATH cross-source",
+        "effect": "death/forced-death setup; hp zeroing and death animation path when conditions are met"
+      },
+      "0x00000004": {
+        "label": "BC_PET_OK cross-source",
+        "effect": "set ACTION byte offset 0x128 to 1"
+      },
+      "0x00000200": {
+        "label": "BC_FADE_OUT cross-source",
+        "effect": "target logic marks participant as traveling/fading and moves it outside the normal battle position before raster update"
+      },
+      "0x00000400": {
+        "label": "BC_REVERSE cross-source",
+        "effect": "when target ACTION+0x118 slot is inactive, invokes set_attrib_reverse(action)"
+      }
+    },
+    "singleStatusSelection": {
+      "precedence": "later tests overwrite earlier d3 selections; highest matching tested flag wins",
+      "mapping": [
+        {"flag":"0x00000008","statusId":1},
+        {"flag":"0x00000010","statusId":2},
+        {"flag":"0x00000020","statusId":3},
+        {"flag":"0x00000040","statusId":4},
+        {"flag":"0x00000080","statusId":5},
+        {"flag":"0x00000100","statusId":6},
+        {"flag":"0x00000800","statusId":7},
+        {"flag":"0x00001000","statusId":8},
+        {"flag":"0x00002000","statusId":9},
+        {"flag":"0x00004000","statusId":10},
+        {"flag":"0x00008000","statusId":11},
+        {"flag":"0x40000000","statusId":34},
+        {"flag":"0x00010000","statusId":12},
+        {"flag":"0x00020000","statusId":13},
+        {"flag":"0x00040000","statusId":14},
+        {"flag":"0x00080000","statusId":15},
+        {"flag":"0x00100000","statusId":16},
+        {"flag":"0x00200000","statusId":17},
+        {"flag":"0x00400000","statusId":18},
+        {"flag":"0x00800000","statusId":19},
+        {"flag":"0x01000000","statusId":20},
+        {"flag":"0x02000000","statusId":21},
+        {"flag":"0x04000000","statusId":22},
+        {"flag":"0x08000000","statusId":23},
+        {"flag":"0x10000000","statusId":32},
+        {"flag":"0x10000000","statusId":33}
+      ],
+      "statusWrite": {
+        "whenSelected": "call set_single_jujutsu(statusId, action), then write statusId to ACTION+0xcc",
+        "whenNone": "write 0 to ACTION+0xcc"
+      }
+    }
+  },
+  "targetStatusAnimationBehavior": {
+    "fadeOut": {
+      "whenFlag": "0x00000200",
+      "effect": "sets travel attribute, chooses outside-screen coordinates according to group side, then set_raster_pos(action)"
+    },
+    "fresh": {
+      "whenFlag": "0x00000001",
+      "effect": "initial participant positioning and animation setup; certain special graphic numbers use an alternate appear/stand/walk path"
+    },
+    "death": {
+      "whenFlag": "0x00000002",
+      "effect": "when current action marker is the special appear state, converts to death state, zeros hp, updates position, plays death animation to completion, loads bitmap and triggers death-related effect setup"
+    },
+    "petOk": {
+      "whenFlag": "0x00000004",
+      "effect": "sets a dedicated action byte flag"
+    },
+    "reverse": {
+      "whenFlag": "0x00000400",
+      "effect": "conditionally invokes set_attrib_reverse"
+    }
+  },
+  "parserSemantics": {
+    "get_bc_num": {
+      "alphabet": "ASCII 0-9 and A-F",
+      "base": 16,
+      "separator": "|",
+      "endOfStream": "NUL causes one-position rewind and return -1",
+      "cursor": "global native BattleStatus cursor state"
+    },
+    "get_bc_asc": {
+      "destination0": "ACTION+0x38",
+      "destination1": "ACTION+0x78",
+      "terminator": "| or NUL",
+      "postprocess": "makeStringFromEscapedPc"
+    },
+    "get_bc_asc_ridepet": {
+      "destination": "ACTION+0x1d8",
+      "terminator": "| or NUL",
+      "postprocess": "makeStringFromEscapedPc"
+    }
+  },
+  "crossSourceReference": {
+    "repository": "alrightlook/StoneAgeMobileApp",
+    "commit": "8c870c87ce1305c52fb6713bf824619467847bba",
+    "files": [
+      "android-project/jni/src/oft/oft.cpp",
+      "android-project/jni/src/oft/vg410.h"
+    ],
+    "status": "semantic comparison only; target identity/version is not asserted"
+  },
+  "importantTargetDivergence": {
+    "bcWaterFearBits": "Target disassembly contains two successive tests of 0x10000000 assigning status 32 then 33. The second visible test is not 0x20000000, so do not silently rewrite it to the cross-source header's BC_FEAR bit without target evidence."
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "decode battle participant BC records into player/pet/enemy runtime state",
+      "drive hp/maxHp/level/graphic/ride-pet state",
+      "apply battle status animation/state IDs 1..23, 32..34 using target-observed flag precedence",
+      "preserve target-specific extra effect fields at ACTION+0xd1c/+0xd20"
+    ],
+    "notProven": [
+      "human-readable names of status IDs 1..23/32..34 from target APK alone",
+      "server formulas that generate battleFlags or status transitions",
+      "exact runtime meaning of target ACTION offsets without further structure/consumer evidence"
+    ]
+  }
+}
