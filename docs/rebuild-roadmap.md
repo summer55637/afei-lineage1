@@ -1,3 +1,14 @@
+## 2026-10-04 V4.78 Browser Idle Supply Return Route Execution
+
+把 V4.77 的唯讀 supply return plan 接到正式執行邊界：沿 plan 的 4-neighbor movePath 逐格呼叫既有 `WORLD_MOVE_STEP`，到 exact source portal 再呼叫既有 `WORLD_WARPPOINT_EXECUTE`；三段完成後停在 WindowHealer interaction range 內，等待既有 `NPC_WINDOW_HEALER_USE`。
+
+每個 movement / warp 都使用既有 Persistent State save + revision conflict contract；V4.78 不做全路徑假原子 rollback，失敗時回傳已完成的 segments 與最新 state。V4.78 不自動付費治療，也不直接提交 `SUPPLY_DONE`。
+
+Regression：`tools/check_v478_idle_supply_route_execution.mjs`；Workflow：`.github/workflows/check-v478-idle-supply-route-execution.yml`。
+
+詳細契約：`docs/reference/v478-browser-idle-supply-route-execution.md`。
+
+---
 ## 2026-10-03 V4.76 Browser WindowHealer
 
 把出生村醫院實際使用的 `npcgen_winhealer` 接入 Browser Controller。以 source `level|hpRate|mpRate|range` 參數建立 WindowHealer runtime；保留低於 healer level 的免費規則，以及達到 healer level 後的 HP/MP 費用計算與金幣不足 fail-closed。
