@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：6fee7f2 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-03T11:32:27Z
+- 最新 commit：1346e31 — fix: wire V4.57 counter loot and ride pet inputs
+- 更新時間：2026-10-03T19:36:32+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.59
 - Playable HTML：⏸️ 尚未建立（刻意保留）
