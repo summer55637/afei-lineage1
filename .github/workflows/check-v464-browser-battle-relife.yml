@@ -1,0 +1,37 @@
+name: Check V4.64 browser battle player relife
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/generated/stoneage_item_relife_runtime.json'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'src/stoneage_browser_battle_relife_runtime.mjs'
+      - 'src/stoneage_browser_battle_relife_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_battle_settlement_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v464_browser_battle_relife.mjs'
+      - '.github/workflows/check-v464-browser-battle-relife.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.64 player relife regression
+        run: node tools/check_v464_browser_battle_relife.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check src/stoneage_browser_battle_relife_runtime.mjs
+          node --check src/stoneage_browser_battle_relife_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_battle_settlement_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v464_browser_battle_relife.mjs
