@@ -1,6 +1,6 @@
 {
   "format": "stoneage-endpoint-world-blocker-audit-v1",
-  "updated": "2026-10-03T07:32:03.740Z",
+  "updated": "2026-10-03T07:35:58.108Z",
   "source": {
     "endpointRoot": "ro0000/server/merged-source/gmsv/data/map",
     "mapsetPath": "ro0000/server/merged-source/gmsv/data/map/mapset.txt",
