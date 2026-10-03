@@ -55,7 +55,10 @@ function runCriticalDamagePlan(context,{
   weaponType='none',
   guardRoll=null,
   lowDamageRoll=null,
-  battleDamageModify=null
+  battleDamageModify=null,
+  throwWeapon=false,
+  ridePetBidByBid={},
+  ridePetAdjustRuntime=null
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-critical-damage',reason:'battle-context-required'};
   const attacker=findEntry(context,attackerBid);
@@ -69,7 +72,10 @@ function runCriticalDamagePlan(context,{
     damageRollWide,
     fieldAtt,
     fieldAttrPower,
-    includeAttr
+    includeAttr,
+    throwWeapon,
+    ridePetBidByBid,
+    ridePetAdjustRuntime
   });
   if(!base.ok)return base;
 
