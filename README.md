@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：16fe07e — feat: add V4.76 WindowHealer source runtime
-- 更新時間：2026-10-03T23:04:13+08:00
+- 最新 commit：a3ccbc3 — ci: add V4.76 WindowHealer regression
+- 更新時間：2026-10-03T23:05:31+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.75
+- Regression 最高版本：V4.76
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
