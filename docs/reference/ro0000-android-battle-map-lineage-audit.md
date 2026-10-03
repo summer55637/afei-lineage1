@@ -459,3 +459,18 @@ resolved metadata (adder/size/WH/offset/hit/height)
 The implementation deliberately leaves unresolved tile IDs as `null` instead of fabricating a mapping. This keeps the reconstruction fail-closed until the actual target resource bytes are available.
 
 A regression test in `tools/test_sabex_client_image_runtime.mjs` verifies mapped and unmapped cell accounting on a synthetic 1089-cell SABEX grid.
+
+
+## 2026-10-03 historical source-lineage refinement
+
+A public StoneAge client source at Signally190/sking-sacli, commit 02538e2cab35322df2f1f7313e20159b1a700973 (2021-10-03), contains the same two-stage battle-map design:
+
+- historical BATTLE_MAP_SIZE 400;
+- conditional _NB_戰鬥地圖優化 path allocating and reading exactly 1089 unsigned-short cells;
+- the conditional renderer iterates 33 rows × 33 columns.
+
+This establishes that a 1089-cell / 33×33 battle-map variant existed in public client lineage by 2021-10-03. It does not prove that this commit is the exact source revision used to build the RO0000 Android APK.
+
+There is an important target/source difference: the RO0000 x86 binary increments the inner vertical coordinate by 23 pixels and the outer vertical coordinate by 23 pixels, whereas this public source uses 24-pixel vertical increments in its 33×33 rendering loop. Therefore this source is a historical/structural lineage reference only; target-binary evidence remains authoritative for the actual RO0000 APK geometry.
+
+The exact source revision that introduced the target's particular 33×33 + 32/23 lattice remains unresolved.
