@@ -159,6 +159,8 @@ async function resolveBattleRound(context,{
   carriedLootReplaceRollsByEnemyBid={},
   carriedLootReplaceSlotRollsByEnemyBid={},
   ridePetBidByParticipantBid={},
+  deathExtraRandomRollsByBid={},
+  defaultPetBidByPlayerBid={0:5},
   dexRollByBid={},
   runtimes={}
 }={}){
@@ -421,6 +423,8 @@ async function resolveBattleRound(context,{
             carriedLootReplaceRollsByEnemyBid,
             carriedLootReplaceSlotRollsByEnemyBid,
             ridePetBidByParticipantBid,
+            deathExtraRandomRollsByBid,
+            defaultPetBidByPlayerBid,
             now
           }
         );
@@ -464,6 +468,8 @@ async function resolveBattleRound(context,{
               carriedLootReplaceRollsByEnemyBid,
               carriedLootReplaceSlotRollsByEnemyBid,
               ridePetBidByParticipantBid,
+              deathExtraRandomRollsByBid,
+              defaultPetBidByPlayerBid,
               transactionPrefix:String(id)+':'+String(actorBid),
               now
             }
