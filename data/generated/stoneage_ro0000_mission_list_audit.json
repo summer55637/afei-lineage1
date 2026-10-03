@@ -1,0 +1,48 @@
+{
+  "format": "stoneage-ro0000-mission-list-audit-v1",
+  "updated": "2026-10-03",
+  "source": {
+    "dataPath": "ro0000/server/merged-source/gmsv/data/mission.txt",
+    "hydataPath": "ro0000/server/merged-source/gmsv/hydata/data/mission.txt",
+    "dataHydataIdentical": true
+  },
+  "runtime": {
+    "fixedSource": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "compileFlag": "_ANGEL_SUMMON",
+    "startupLoader": "gmsv/src/init.c -> LoadMissionList()",
+    "parserFormat": "id,requiredLevel,eventFlagList,detail,limitHours",
+    "selection": "char_angel.c::selectAngel filters by hero level and required event flags before selecting a mission",
+    "importantBoundary": "The mission table is part of the online Angel/Summon subsystem; pair matching and account-server mission state are not adopted as single-player runtime."
+  },
+  "missions": [
+    {
+      "id": 1,
+      "requiredLevel": 100,
+      "eventFlags": "4;81;102",
+      "detail": "前往寻找古瓜，了解他最近的烦恼",
+      "limitHours": 48
+    },
+    {
+      "id": 2,
+      "requiredLevel": 100,
+      "eventFlags": "4;81;88;89",
+      "detail": "前往寻找邬莉叶，看来他似乎又遇到麻烦了",
+      "limitHours": 48
+    },
+    {
+      "id": 3,
+      "requiredLevel": 100,
+      "eventFlags": "4;81;110;111",
+      "detail": "前往寻找赫肯豪国王，他好像正准备做一些事情",
+      "limitHours": 48
+    },
+    {
+      "id": 4,
+      "requiredLevel": 100,
+      "eventFlags": "4;81;112;113;114;115",
+      "detail": "前往寻找福列克斯王子，他当上国王后，目前正遇上一些问题",
+      "limitHours": 48
+    }
+  ],
+  "singlePlayerUse": "Preserve the four endpoint mission descriptions and requirements as optional high-level quest-content source; do not claim their complete NPC/event chain is closed."
+}
