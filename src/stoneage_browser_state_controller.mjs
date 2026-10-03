@@ -73,6 +73,8 @@ import { createBrowserBattleItemCommitRuntime, ACTION_BATTLE_ITEM_COMMIT, BROWSE
 import { createBrowserBattleCompliancePlanRuntime, ACTION_BATTLE_COMPLIANCE_PLAN, BROWSER_BATTLE_COMPLIANCE_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_compliance_runtime.mjs';
 import { createBrowserBattleComplianceCommitRuntime, ACTION_BATTLE_COMPLIANCE_COMMIT, BROWSER_BATTLE_COMPLIANCE_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_compliance_commit_runtime.mjs';
 import { createBrowserBattleDeathExtraCommitRuntime, ACTION_BATTLE_DEATH_EXTRA_COMMIT, BROWSER_BATTLE_DEATH_EXTRA_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_death_extra_commit_runtime.mjs';
+import { createBrowserBattleRelifeRuntime, ACTION_BATTLE_RELIFE_APPLY, BROWSER_BATTLE_RELIFE_RUNTIME_FORMAT } from './stoneage_browser_battle_relife_runtime.mjs';
+import { createBrowserBattleRelifeCommitRuntime, ACTION_BATTLE_RELIFE_COMMIT, BROWSER_BATTLE_RELIFE_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_relife_commit_runtime.mjs';
 import { createBrowserBattleExitPlanRuntime, ACTION_BATTLE_EXIT_PLAN, BROWSER_BATTLE_EXIT_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_exit_runtime.mjs';
 import { createBrowserBattleExitCommitRuntime, ACTION_BATTLE_EXIT_COMMIT, BROWSER_BATTLE_EXIT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_exit_commit_runtime.mjs';
 import { createBrowserBattlePlayerExitRuntime, ACTION_BATTLE_PLAYER_EXIT_PLAN, BROWSER_BATTLE_PLAYER_EXIT_RUNTIME_FORMAT } from './stoneage_browser_battle_player_exit_runtime.mjs';
@@ -184,6 +186,7 @@ function createBrowserStateController({
   encounterTargetIndex=null,
   encounterGroupCatalog=null,
   petSkillCatalog=null,
+  playerRelifeCatalog=null,
   worldMovementOptions={},
   worldWarpPointOptions={},
   battleFieldNoProvider=null,
@@ -243,7 +246,8 @@ function createBrowserStateController({
     profitCreditRuntime:battleProfitCreditRuntime,
     carriedLootRuntime:battleCarriedLootRuntime,
     enemyExpRuntime:battleEnemyExpRuntime,
-    ridePetAdjustRuntime:battleRidePetAdjustRuntime
+    ridePetAdjustRuntime:battleRidePetAdjustRuntime,
+    relifeRuntime:battleRelifeRuntime
   });
   const battleCounterRuntime=createBrowserBattleCounterRuntime();
   const battleDeathRuntime=createBrowserBattleDeathRuntime();
@@ -262,6 +266,8 @@ function createBrowserStateController({
   const battleCompliancePlanRuntime=createBrowserBattleCompliancePlanRuntime();
   const battleComplianceCommitRuntime=createBrowserBattleComplianceCommitRuntime();
   const battleDeathExtraCommitRuntime=createBrowserBattleDeathExtraCommitRuntime();
+  const battleRelifeRuntime=createBrowserBattleRelifeRuntime();
+  const battleRelifeCommitRuntime=createBrowserBattleRelifeCommitRuntime();
   const battleExitPlanRuntime=createBrowserBattleExitPlanRuntime();
   const battleExitCommitRuntime=createBrowserBattleExitCommitRuntime();
   const battlePlayerExitRuntime=createBrowserBattlePlayerExitRuntime();
@@ -281,7 +287,8 @@ function createBrowserStateController({
     criticalDamageRuntime:battleCriticalDamageRuntime,
     damageReactRuntime:battleDamageReactRuntime,
     damageReactCommitRuntime:battleDamageReactCommitRuntime,
-    damageDeathChainRuntime:battleDamageDeathChainRuntime
+    damageDeathChainRuntime:battleDamageDeathChainRuntime,
+    relifeRuntime:battleRelifeRuntime
   });
   const battleRoundRuntime=createBrowserBattleRoundRuntime({
     attackCountRuntime:battleAttackCountRuntime,
@@ -298,7 +305,11 @@ function createBrowserStateController({
     damageDeathChainRuntime:battleDamageDeathChainRuntime,
     counterChainRuntime:battleCounterChainRuntime,
     statusRuntime:battleStatusRuntime,
-    endRuntime:battleEndRuntime
+    endRuntime:battleEndRuntime,
+    profitCreditRuntime:battleProfitCreditRuntime,
+    carriedLootRuntime:battleCarriedLootRuntime,
+    enemyExpRuntime:battleEnemyExpRuntime,
+    relifeRuntime:battleRelifeRuntime
   });
   const battleCommandWaitRuntime=createBrowserBattleCommandWaitRuntime();
   const battleEnemyAiRuntime=createBrowserBattleEnemyAiRuntime();
@@ -663,6 +674,8 @@ function createBrowserStateController({
             attackCount:action.attackCount??null,
             targets:Array.isArray(action.targets)?action.targets:[],
             hitRollBundles:Array.isArray(action.hitRollBundles)?action.hitRollBundles:[],
+            deathExtraRandomRollsByBid:action.deathExtraRandomRollsByBid??{},
+            defaultPetBidByPlayerBid:action.defaultPetBidByPlayerBid??{0:5},
             transactionPrefix:action.transactionPrefix??'attack-sequence',
             now:action.now??null
           }
@@ -758,6 +771,31 @@ function createBrowserStateController({
           pipeline.criticalDamage=clone(result);
         }
         return {...result,format:BROWSER_BATTLE_CRITICAL_DAMAGE_RUNTIME_FORMAT,state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_RELIFE_APPLY){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-relife',reason:'battle-context-required',state:clone(currentState)};
+        if(battleRelifeRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-relife',reason:'browser-battle-relife-runtime-invalid',state:clone(currentState)};
+        const result=battleRelifeRuntime.apply(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {trigger:String(action.trigger??'controller-explicit-relife').trim()||'controller-explicit-relife'}
+        );
+        if(result.ok===true&&result.handled===true&&result.context)battleContext=clone(result.context);
+        return {...result,format:BROWSER_BATTLE_RELIFE_RUNTIME_FORMAT,battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
+      }
+      if(type===ACTION_BATTLE_RELIFE_COMMIT){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-relife-commit',reason:'battle-context-required',state:clone(currentState)};
+        if(battleRelifeCommitRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-relife-commit',reason:'browser-battle-relife-commit-runtime-invalid',state:clone(currentState)};
+        const result=battleRelifeCommitRuntime.commit(
+          clone(currentState),
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            transactionId:action.transactionId??null,
+            expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision,
+            now:clockFactory(action.now,now)
+          }
+        );
+        if(result.ok===true&&result.handled===true&&result.state)currentState=result.state;
+        return {...result,format:BROWSER_BATTLE_RELIFE_COMMIT_RUNTIME_FORMAT,battleContext:battleContext?clone(battleContext):null,state:clone(result.state??currentState)};
       }
       if(type===ACTION_BATTLE_DEATH_PLAN){
         if(!battleContext)return {ok:false,handled:false,stage:'battle-death',reason:'battle-context-required',state:clone(currentState)};
@@ -1730,6 +1768,9 @@ function createBrowserStateController({
           battleFieldNo,
           materializeEnemyStats:action.materializeEnemyStats===true,
           petSkillCatalog,
+          playerItemSlots:currentState?.inventory?.playerItemSlots??[],
+          playerItemRuntimeSlots:currentState?.inventory?.itemRuntime?.slots??{},
+          playerRelifeCatalog,
           enemyStatRolls:encounterGroupCatalog && action.materializeEnemyStats===true
             ? pipeline?.generation?.coreStatRolls
             : (Array.isArray(action.enemyStatRolls)?action.enemyStatRolls:[])
