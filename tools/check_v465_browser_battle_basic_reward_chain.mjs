@@ -210,6 +210,31 @@ assert.equal(postRelifeProfit.deathExtra.newEvents.length,0);
 assert.equal(postRelifeProfit.context.sides[0].entries[0].charm,20);
 assert.equal(postRelifeProfit.context.sides[0].entries[0].variableAi,0);
 
+const lethalContext={
+  format:'stoneage-browser-battle-context-runtime-v1',
+  context:{
+    mode:'battle',sourceMode:2,turn:0,damageCommitRevision:0,fieldAtt:4,attPow:0,norisk:0,dpbattle:0,
+    finishHookProfile:{auditFormat:'stoneage-battle-finish-hook-audit-v1',profile:'ordinary-world-encounter',winFuncInjected:false,pkFuncInjected:false,dantai:false,linkedBattleCount:0},
+    sourcePlayerItemSlotsSnapshot:[400,...Array(23).fill(null)],
+    sourcePlayerRelifeCandidates:[{playerSlot:0,existingIndex:400,itemId:20131,itemName:'替身娃娃 Lv1',relifeFunc:'ITEM_DIErelife',equipPlace:3,hpArgument:'200'}],
+    sourceRelifeConsumedExistingIndexes:[],sourceRelifeEvents:[],
+    sides:[
+      {side:0,type:0,flg:0,entries:[{bid:0,battleSlot:0,battleSide:0,sourceType:'player',characterId:'p1',hp:1,maxHp:300,mp:0,maxMp:0,fixDex:1,quick:1,fixVital:1,attackPower:1,defencePower:1,level:10,fixLuck:0,battleFlg:0,battleCommands:[-1,-1,-1],sourceBattleCharMode:3,battleMode:'c_ok',elements:{fire:0,water:0,earth:0,wind:0},damageVanish:0,damageAbsorb:0,damageReflect:0,damageReact:0,isDie:false,deadCount:0,relife:0,battleOutcomeFlags:0,ultimate:0,charm:20,deadPetCount:0,sourceAddProfitDeathPending:false,sourceDeathExtraProcessed:false},...Array(9).fill(null)]},
+      {side:1,type:1,flg:0,entries:[{bid:10,battleSlot:0,battleSide:1,sourceType:'enemy',characterId:'e10',hp:1000,maxHp:1000,fixDex:100,quick:100,fixVital:1,attackPower:1000,defencePower:1,fixStr:1000,fixTgh:1,level:10,fixLuck:0,battleFlg:0,battleCommands:[1,0,-1],sourceBattleCharMode:3,battleMode:'c_ok',elements:{fire:0,water:0,earth:0,wind:0},damageVanish:0,damageAbsorb:0,damageReflect:0,damageReact:0,isDie:false,deadCount:0,relife:0,battleOutcomeFlags:0,ultimate:0,sourceEnemyExp:-1},...Array(9).fill(null)]}
+    ]
+  }
+};
+const lethal=await attackSequenceRuntime.resolve(lethalContext,{attackerBid:10,requestedTargetBid:0,weaponType:'fist',attackCount:1,targets:[0],hitRollBundles:[{weaponCritical:0,throwWeapon:false,duckRoll:10000,criticalRoll:10000,damageRollNear:1,damageRollWide:100,guardRoll:96,lowDamageRoll:1,battleDamageModify:1,includeAttr:false,defaultTargetRoll:0}],transactionPrefix:'v465-lethal-player-relife'});
+assert.equal(lethal.ok,true,JSON.stringify(lethal));
+assert.equal(lethal.hits.length,1);
+assert.equal(lethal.hits[0].profitCredit.deathExtra.newEvents[0].kind,'player-normal-death');
+assert.equal(lethal.hits[0].relife.applied,true);
+assert.equal(lethal.hits[0].relife.event.itemId,20131);
+assert.equal(lethal.context.sides[0].entries[0].hp,200);
+assert.equal(lethal.context.sides[0].entries[0].isDie,false);
+assert.equal(lethal.context.sides[0].entries[0].sourceDeathExtraProcessed,true);
+assert.equal(lethal.context.sourceRelifeEvents.length,1);
+
 console.log(JSON.stringify({
   pass:true,
   format:'stoneage-v465-browser-battle-basic-single-hit-reward-chain-v1',
