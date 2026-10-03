@@ -128,7 +128,14 @@ What remains genuinely external to the APK evidence is the **actual production r
 1. Obtain and hash the actual `battle00.sabex` ... `battle219.sabex` payloads, where authorized.
 2. Obtain the actual `adrn.bin` / `real.bin` / sprite-shard bytes needed for pixel-level verification.
 3. Recover per-file update metadata and patch payloads from an authorized captured update session or saved deployment snapshot.
-4. Determine the runtime callers/usage of the small set of legacy or optional third-party native declarations that have no direct JNI export.
-5. Perform original-device runtime/screen comparison; static evidence alone cannot close this item.
+4. Perform original-device runtime/screen comparison after the relevant production assets are available; compare only visible behavior that can inform reconstruction.
+
+Unexported legacy/optional third-party JNI caller discovery is intentionally out of scope: the static boundary is recorded, but further tracing currently has no direct gameplay, content, map, or rendering output. Reopen it only if a concrete reconstruction defect depends on one of those calls.
+
+## 8. Repository asset availability recheck (2026-10-03)
+
+The `main` tree at recheck time was `cec2c9e31e81248e501fffe8445a6f05a332afa8` (10,307 entries). Under `ro0000/client/`, the only file is `android/冰河石器-隐盟.apk` (24,931,847 bytes). The repository inventory contains no target `.sabex`, `adrn.bin`, `real.bin`, `spr.bin`, `spradrn.bin`, or palette `.sap` payloads; the small server-side `.bin` files are not client resource substitutes.
+
+`client-assets/manifest.json` remains `status: unavailable`, with `files.adrn` and `files.real` unset. The existing SABEX / ADRN / RD / SPR decoders and asset-pack loader have synthetic-fixture tests, so the present gap is actual target resource bytes and byte-level/pixel-level verification—not a missing decoder scaffold.
 
 No missing production resource bytes are fabricated or substituted into the target evidence layer.
