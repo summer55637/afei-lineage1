@@ -595,6 +595,16 @@ The audit gate compares focused native function and global-object name sets betw
 The focused artifact now publishes every function selected by the native map/resource symbol filter instead of a second manually maintained name allowlist. It also includes the filtered global object symbols, and CI checks object-name parity across x86 and ARMv7. This prevents newly discovered in-scope symbols from silently disappearing from the published evidence simply because a secondary list was not updated.
 
 
+## ABI-aware native call-target comparison (2026-10-03)
+
+The new `tools/audit_ro0000_android_native_abi.py` follows reachable intraprocedural control flow and compares named direct-call target sets between the packaged ARMv7 and x86 `libStoneage.so` builds. This avoids treating instruction bytes, linker offsets, or unreachable disassembly tails as equivalent evidence. The CI test suite includes conditional-flow, indirect-branch, non-returning-call, and literal-pool regression cases.
+
+On the current audited APK, the focused inventory contains 326 functions in each ABI. Control flow is fully traceable for 317 functions in both builds, and those 317 functions have zero named direct-call target mismatches. The same nine switch/jump-table functions remain outside complete control-flow coverage in each ABI; the comparison reports them rather than inferring their targets. There are two reachable indirect-call sites in each ABI. Tail branches are retained as a separate observation and are not treated as direct calls because linker veneers and symbol aliases can obscure their target meaning.
+
+Memory-operation code generation is also reported separately: the x86 excerpts contain 57 `memset` and 5 `memcpy` call sites, while ARM uses `__aeabi_*` memory helpers in the audited functions. These differences are not counted as semantic call-target mismatches. The machine-readable comparison is published at `data/generated/stoneage_ro0000_android_native_abi_comparison.json`.
+
+This check improves cross-ABI evidence consistency; it is not instruction-level equivalence, complete static decompilation, or proof of identical runtime behavior. The nine functions with indirect dispatch and all device/server-dependent behavior remain outside the parity conclusion.
+
 ## SDL client loop, input dispatch, and movement events
 
 The target's SDL entry, frame loop, event dispatcher, keyboard/mouse adapters, socket loop, and movement/event dispatch are now recorded in \`data/generated/stoneage_ro0000_android_client_loop_contract.json\`.
