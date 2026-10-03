@@ -89,7 +89,7 @@ def validate_resource_function_anchors(native, layout):
     errors = []
     apk_sha = native.get("auditedApk", {}).get("sha256")
     libs = {lib.get("abi"): lib for lib in native.get("nativeLibraries", [])}
-    for section_name in ("autoMapColor", "autoMapRendering", "worldMapRuntime"):
+    for section_name in ("autoMapColor", "autoMapRendering", "worldMapRuntime", "spriteBoundaryAudit"):
         section = layout.get(section_name)
         if not isinstance(section, dict):
             errors.append(f"resource layout missing {section_name}")
@@ -176,6 +176,45 @@ def validate_resource_function_anchors(native, layout):
                         errors.append(
                             f"{section_name}: {abi} call evidence count too low for "
                             f"{function}/{target}: expected at least {minimum}, found {actual}"
+                        )
+        for function, abi_patterns in section.get("requiredDisassemblyPatterns", {}).items():
+            if function not in functions:
+                errors.append(f"{section_name}: instruction evidence references unknown function {function}")
+                continue
+            for abi_key, patterns in abi_patterns.items():
+                abi = ABI_KEYS.get(abi_key)
+                if not abi:
+                    errors.append(f"{section_name}: unsupported ABI key in instruction evidence: {abi_key}")
+                    continue
+                lib = libs.get(abi)
+                if not lib:
+                    continue
+                matches = [
+                    symbol for symbol in lib.get("focusedSymbols", [])
+                    if symbol.get("type") == "FUNC" and function_matches(symbol, function)
+                ]
+                if not matches:
+                    errors.append(f"{section_name}: {abi} function missing for instruction evidence: {function}")
+                    continue
+                disassembly = matches[0].get("disassembly") or {}
+                if disassembly.get("status") != "ok" or disassembly.get("excerptTruncated", False):
+                    errors.append(
+                        f"{section_name}: missing complete disassembly for {abi}/{function}"
+                    )
+                    continue
+                text = "\\n".join(disassembly.get("excerpt", []))
+                for pattern in patterns:
+                    try:
+                        matched = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+                    except re.error as exc:
+                        errors.append(
+                            f"{section_name}: invalid instruction pattern for {function}: {exc}"
+                        )
+                        continue
+                    if not matched:
+                        errors.append(
+                            f"{section_name}: {abi} instruction evidence missing for "
+                            f"{function}: {pattern}"
                         )
     return errors
 
