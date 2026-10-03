@@ -53,6 +53,7 @@ import { createBrowserBattleFinishCommitRuntime, ACTION_BATTLE_FINISH_COMMIT, BR
 import { createBrowserBattleRoundRuntime, ACTION_BATTLE_ROUND_RESOLVE, BROWSER_BATTLE_ROUND_RUNTIME_FORMAT } from './stoneage_browser_battle_round_runtime.mjs';
 import { createBrowserBattleCounterChainRuntime, ACTION_BATTLE_COUNTER_CHAIN_RESOLVE, BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT } from './stoneage_browser_battle_counter_chain_runtime.mjs';
 import { createBrowserBattleDamageReactCommitRuntime, ACTION_BATTLE_DAMAGE_REACT_COMMIT, BROWSER_BATTLE_DAMAGE_REACT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_damage_react_commit_runtime.mjs';
+import { createBrowserBattleAttackSequenceRuntime, ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE, BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT } from './stoneage_browser_battle_attack_sequence_runtime.mjs';
 import { createBrowserBattleProfitRouteRuntime, ACTION_BATTLE_PROFIT_ROUTE_PLAN, BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_battle_profit_route_runtime.mjs';
 import { createBrowserBattleDuelPointRuntime, ACTION_BATTLE_DUELPOINT_PLAN, BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_runtime.mjs';
 import { createBrowserBattleDuelPointCommitRuntime, ACTION_BATTLE_DUELPOINT_COMMIT, BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_commit_runtime.mjs';
@@ -214,6 +215,15 @@ function createBrowserStateController({
   const battleCriticalDamageRuntime=createBrowserBattleCriticalDamageRuntime();
   const battleDamageReactRuntime=createBrowserBattleDamageReactRuntime();
   const battleDamageReactCommitRuntime=createBrowserBattleDamageReactCommitRuntime();
+  const battleAttackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
+    attackPreflightRuntime:battleAttackPreflightRuntime,
+    attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
+    damagePlanRuntime:battleDamagePlanRuntime,
+    criticalDamageRuntime:battleCriticalDamageRuntime,
+    damageReactRuntime:battleDamageReactRuntime,
+    damageReactCommitRuntime:battleDamageReactCommitRuntime,
+    damageDeathChainRuntime:battleDamageDeathChainRuntime
+  });
   const battleDamageCommitRuntime=createBrowserBattleDamageCommitRuntime();
   const battleDamageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
   const battleCounterRuntime=createBrowserBattleCounterRuntime();
@@ -609,6 +619,41 @@ function createBrowserStateController({
           state:clone(currentState),
           battleContext:battleContext?clone(battleContext):null
         };
+      }
+      if(type===ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE){
+        const phaseGate=requireBattlePhase(battleContext,type,currentState);
+        if(phaseGate)return phaseGate;
+        if(battleAttackSequenceRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-attack-sequence',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,reason:'browser-battle-attack-sequence-runtime-invalid',state:clone(currentState)};
+        const result=await battleAttackSequenceRuntime.resolve(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            attackerBid:action.attackerBid??null,
+            requestedTargetBid:action.requestedTargetBid??action.targetBid??null,
+            weaponType:action.weaponType??'none',
+            attackCount:action.attackCount??null,
+            targets:Array.isArray(action.targets)?action.targets:[],
+            hitRollBundles:Array.isArray(action.hitRollBundles)?action.hitRollBundles:[],
+            transactionPrefix:action.transactionPrefix??'attack-sequence',
+            now:action.now??null
+          }
+        );
+        if(result.ok===true&&result.handled===true&&result.context){
+          battleContext=clone(result.context);
+          battleAttackPipeline={
+            attackerBid:result.attackerBid,
+            requestedTargetBid:result.requestedTargetBid,
+            finalTargetBid:result.hits?.[0]?.finalTargetBid??null,
+            weaponType:String(result.weaponType??action.weaponType??'none').trim().toLowerCase(),
+            throwWeapon:Boolean(action.throwWeapon===true),
+            attackSequence:clone(result),
+            damage:null,
+            criticalDamage:null,
+            damageReact:null,
+            damageCommit:null,
+            counter:null
+          };
+        }
+        return {...result,format:BROWSER_BATTLE_ATTACK_SEQUENCE_RUNTIME_FORMAT,battleContext:battleContext?clone(battleContext):null,state:clone(currentState)};
       }
       if(type===ACTION_BATTLE_DAMAGE_PLAN){
         const phaseGate=requireBattlePhase(battleContext,type,currentState);
