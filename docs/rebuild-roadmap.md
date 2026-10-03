@@ -1,3 +1,17 @@
+## 2026-10-03 V4.69 Browser Battle Auto Controller
+
+把 V4.67 Browser Battle Auto Orchestrator 接入正式 `stoneage_browser_state_controller.mjs`，新增 `BATTLE_AUTO_RUN` 作為 Browser 端單一自動戰鬥入口。
+
+每回合沿用既有 Player idle strategy → Enemy AI → Battle Round Resolve；不新增戰鬥公式、AI 規則、技能規則或 Persistent State schema。所有 RNG 仍由 caller 注入，缺少必要資料或 runtime 依賴仍 fail-closed。
+
+當 Battle Round 判定戰鬥完成時，Auto Controller 會帶回既有 `finishPlan`，但不在本版自動執行 `BATTLE_FINISH_COMMIT`、Settlement Receipt、Player/Pet Exit 或 Battle Context Clear，避免提前宣稱完整 battle→world loop 已封閉。
+
+Regression：`tools/check_v469_browser_battle_auto_controller.mjs`；Workflow：`.github/workflows/check-v469-browser-battle-auto-controller.yml`。
+
+詳細契約：`docs/reference/v469-browser-battle-auto-controller.md`。
+
+---
+
 ## 2026-10-02 V4.42 Enemy Steal WAZA Integration
 
 接入 Enemy WAZA skill 140（PETSKILL_Steal），COM1=STEAL(1013)、COM2=來源目標，不改 COM3。依 Fixed-C `BATTLE_Steal` 保留 RNG 順序與邊界：先 RAND(1,100)<50；成功後 RAND(1,100)<50 選金幣，否則選物品；金幣分支再 RAND(8,12)，物品分支只在背包有有效物品時才 RAND(0,n-1)。非玩家目標成功率為 0；零金幣與空背包皆不視為偷竊成功。
