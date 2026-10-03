@@ -37,7 +37,7 @@ const battleContext={
     }],
     sides:[
       {side:0,type:0,entries:[
-        {bid:0,sourceType:'player',characterId:'p1',level:10,hp:100,isDie:false,deadPetCount:1,getitem:[-1,-1,-1]}
+        {bid:0,sourceType:'player',characterId:'p1',level:10,hp:0,isDie:true,deadPetCount:1,getitem:[-1,-1,-1]}
       ]},
       {side:1,type:1,entries:Array(10).fill(null)}
     ]
@@ -74,9 +74,10 @@ const settled=settlement.commit(committed.state,battleContext,{
   expectedRevision:8,
   now
 });
-assert.equal(settled.ok,false,'ordinary live PVE also requires levelUp transaction');
-assert.equal(settled.reason,'settlement-transaction-required');
-assert.equal(settled.kind,'levelUp');
+assert.equal(settled.ok,true,JSON.stringify(settled));
+assert.equal(settled.applied,true);
+assert.equal(settled.requiredBranches.length,1);
+assert.equal(settled.requiredBranches[0],'deathExtra');
 
 console.log(JSON.stringify({
   pass:true,
