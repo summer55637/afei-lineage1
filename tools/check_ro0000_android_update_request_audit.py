@@ -46,6 +46,13 @@ class AndroidUpdateAuditTests(unittest.TestCase):
             8,
         )
 
+    def test_basename_split_contract(self):
+        detail = self.data["responseCallback"]["basenameHelperDetail"]
+        self.assertEqual(detail["delimiterByte"], "0x2f")
+        self.assertEqual(detail["delimiterAscii"], "/")
+        self.assertEqual(detail["searchPositionArgument"], "0xffffffff")
+        self.assertEqual(detail["postSearchAdjustment"], "returnedPosition + 1")
+
     def test_install_stage(self):
         self.assertEqual(
             self.data["installationStage"]["installCall"],
