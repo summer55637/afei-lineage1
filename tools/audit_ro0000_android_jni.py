@@ -47,6 +47,126 @@ def parse_all_jni_symbols(readelf_output):
     return sorted(symbols), jni_onload
 
 
+
+def parse_jni_onload_symbols(readelf_output):
+    """Return defined, externally visible JNI_OnLoad function records."""
+    records = []
+    for line in readelf_output.splitlines():
+        fields = line.split()
+        if len(fields) < 8 or not fields[0].endswith(":"):
+            continue
+        if not fields[0][:-1].isdigit() or fields[6] == "UND":
+            continue
+        if fields[3] != "FUNC" or fields[4] not in ("GLOBAL", "WEAK") or fields[5] != "DEFAULT":
+            continue
+        name = fields[7].split("@", 1)[0]
+        if name != "JNI_OnLoad":
+            continue
+        try:
+            value = int(fields[1], 16)
+            size = int(fields[2], 10)
+        except ValueError:
+            continue
+        records.append({"value": "0x%x" % value, "size": size})
+    return sorted(records, key=lambda item: (int(item["value"], 16), item["size"]))
+
+
+def summarize_onload_disassembly(disassembly):
+    """Keep only call-level evidence; do not publish raw vendor disassembly."""
+    calls = []
+    indirect_calls = 0
+    instruction_count = 0
+    for line in disassembly.splitlines():
+        if not re.match(r"^\\s*[0-9a-fA-F]+:", line):
+            continue
+        instruction_count += 1
+        rest = line.split(":", 1)[1].strip()
+        if not rest:
+            continue
+        fields = rest.split(None, 1)
+        mnemonic = fields[0].lower()
+        operands = fields[1] if len(fields) > 1 else ""
+        is_call = (
+            mnemonic.startswith("call")
+            or mnemonic in ("bl", "blx", "bl.n", "bl.w", "blx.n", "blx.w")
+        )
+        if not is_call:
+            continue
+        target = re.search(r"<([^>]+)>", operands)
+        if target:
+            name = re.sub(r"\\+0x[0-9a-fA-F]+$", "", target.group(1).strip())
+            name = re.sub(r"(?:@@Base|@plt|@PLT)$", "", name)
+            if name and name != "JNI_OnLoad":
+                calls.append(name)
+        elif operands.lstrip().startswith("*") or mnemonic.startswith("blx"):
+            indirect_calls += 1
+    return {
+        "instructionLineCount": instruction_count,
+        "directCallTargets": sorted(set(calls)),
+        "indirectCallSiteCount": indirect_calls,
+        "disassemblySha256": hashlib.sha256(
+            disassembly.encode("utf-8", errors="replace")
+        ).hexdigest(),
+    }
+
+
+def relevant_native_strings(binary_data, declarations):
+    """Find declaration names present as printable strings in a packaged ELF."""
+    strings = [
+        value.decode("ascii", "ignore")
+        for value in re.findall(rb"[\\x20-\\x7e]{4,}", binary_data)
+    ]
+    found = []
+    for method in declarations:
+        owner = method.get("class") or ""
+        name = method.get("name") or ""
+        if not name:
+            continue
+        owner_text = owner[1:-1].replace("/", ".") if owner.startswith("L") and owner.endswith(";") else owner
+        owner_variants = {owner_text, owner_text.replace(".", "/")}
+        matching = [
+            value for value in strings
+            if name in value and (not owner_text or any(x in value for x in owner_variants))
+        ]
+        if matching:
+            found.append({
+                "class": owner,
+                "name": name,
+                "stringCandidates": sorted(set(matching))[:8],
+            })
+    return found
+
+
+def inspect_jni_onload(binary_path, binary_data, records, objdump, declarations):
+    evidence = []
+    for record in records:
+        command = [
+            objdump, "-d", "--demangle", "--no-show-raw-insn",
+            "--disassemble=JNI_OnLoad", str(binary_path),
+        ]
+        proc = subprocess.run(
+            command, check=False, capture_output=True, text=True, errors="replace"
+        )
+        if proc.returncode:
+            evidence.append({
+                **record,
+                "status": "disassembly-unavailable",
+                "detail": (proc.stderr or proc.stdout).strip()[:300],
+                "callSummary": None,
+            })
+            continue
+        summary = summarize_onload_disassembly(proc.stdout)
+        evidence.append({
+            **record,
+            "status": "disassembly-ok",
+            "callSummary": summary,
+            "candidateNativeMethodStrings": relevant_native_strings(
+                binary_data, declarations
+            ),
+            "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation.",
+        })
+    return evidence
+
 def compare_jni_methods(declared, exports):
     declared_names = sorted({item["name"] for item in declared})
     export_names = sorted(set(exports))
@@ -118,7 +238,7 @@ def extract_native_declarations(dex_audit):
     return methods
 
 
-def inspect_apk_libraries(apk_path, readelf):
+def inspect_apk_libraries(apk_path, readelf, objdump="objdump", declarations=None):
     by_abi = {}
     with zipfile.ZipFile(apk_path) as zf, tempfile.TemporaryDirectory(prefix="ro0000-jni-") as temp:
         entries = [
@@ -136,13 +256,22 @@ def inspect_apk_libraries(apk_path, readelf):
             if proc.returncode:
                 raise RuntimeError("readelf failed for packaged native library %s: %s" %
                                    (info.filename, proc.stderr.strip()))
-            symbols, has_onload = parse_all_jni_symbols(proc.stdout + "\n" + proc.stderr)
+            binary_data = zf.read(info)
+            readelf_output = proc.stdout + "\n" + proc.stderr
+            symbols, has_onload = parse_all_jni_symbols(readelf_output)
+            onload_records = parse_jni_onload_symbols(readelf_output)
+            onload_evidence = []
+            if onload_records:
+                onload_evidence = inspect_jni_onload(
+                    local_path, binary_data, onload_records, objdump, declarations or []
+                )
             by_abi.setdefault(abi, []).append({
                 "path": info.filename,
-                "sha256": hashlib.sha256(zf.read(info)).hexdigest(),
+                "sha256": hashlib.sha256(binary_data).hexdigest(),
                 "byteSize": info.file_size,
                 "jniExports": symbols,
                 "jniOnLoadExported": has_onload,
+                "jniOnLoadEvidence": onload_evidence,
             })
     return by_abi
 
@@ -239,6 +368,7 @@ def main():
     parser.add_argument("--apk-sha256", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--readelf", default="readelf")
+    parser.add_argument("--objdump", default="objdump")
     args = parser.parse_args()
 
     dex_path = pathlib.Path(args.dex_audit)
@@ -253,7 +383,7 @@ def main():
     if apk_digest.lower() != args.apk_sha256.lower():
         raise SystemExit("APK SHA-256 differs from expected target identity")
 
-    libraries = inspect_apk_libraries(apk_path, args.readelf)
+    libraries = inspect_apk_libraries(apk_path, args.readelf, args.objdump, declarations)
     comparison = compare_all_declarations(declarations, libraries)
     legacy_declarations = [m for m in declarations
                            if m["class"] == "Lcom/newssa/stoneage/ko/JNILibrary;"]
