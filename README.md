@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：b9423db — [audit] extract all packaged native libraries for JNI analysis
-- 更新時間：2026-10-03T09:50:43+08:00
+- 最新 commit：bad18df — [audit] close Android APK resource and bootstrap boundary
+- 更新時間：2026-10-03T09:52:36+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
