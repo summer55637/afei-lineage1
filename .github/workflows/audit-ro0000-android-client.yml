@@ -28,6 +28,8 @@ on:
       - 'data/generated/stoneage_ro0000_android_client_loop_contract.json'
       - 'data/generated/stoneage_ro0000_android_map_movement_contract.json'
       - 'data/generated/stoneage_ro0000_android_battle_command_decode_contract.json'
+      - 'data/generated/stoneage_ro0000_android_battle_waza_hitbox_contract.json'
+      - 'tools/check_ro0000_android_battle_waza_hitbox_contract.py'
       - 'tools/check_ro0000_android_battle_command_contract.py'
       - 'tools/check_ro0000_android_update_request_audit.py'
       - 'data/generated/stoneage_ro0000_android_update_request_audit.json'
@@ -56,6 +58,8 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native_contracts.py'
       - name: Test Android battle command decoder contract
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_battle_command_contract.py'
+      - name: Test Android battle waza hitbox contract
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_battle_waza_hitbox_contract.py'
       - name: Test Android Lua container contract
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_lua_container_contract.py'
       - name: Test Android SPR/SPRADRN parser and target fixups
@@ -91,6 +95,7 @@ jobs:
             --movement-contract data/generated/stoneage_ro0000_android_map_movement_contract.json \
             --resource-layout data/generated/stoneage_ro0000_android_native_resource_layout.json \
             --battle-command-contract data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
+            --waza-hitbox-contract data/generated/stoneage_ro0000_android_battle_waza_hitbox_contract.json
       - name: Publish focused APK evidence with retry
         shell: bash
         env:
@@ -117,7 +122,7 @@ jobs:
               "play_map_bgm", "drawMap", "drawMap2", "drawMapUi", "redrawMap", "initMap",
               "createMap", "setMap", "writeMap", "readMap", "readHitMap", "checkHitMap",
               "checkEmptyMap", "checkEmptyMapData", "_checkEmptyMap", "setEventMemory",
-              "lssproto_S_recv", "lssproto_M_recv", "lssproto_EN_recv", "BattleProc", "master", "get_num", "get_command_asc", "set_damage_num", "showDamage_num", "damage_dispx", "0x927c0", "0x186a0",
+              "lssproto_S_recv", "lssproto_M_recv", "lssproto_EN_recv", "BattleProc", "master", "get_num", "get_command_asc","BattleSetWazaHitBox", "BattleProc", "master", "get_num", "get_command_asc", "set_damage_num", "showDamage_num", "damage_dispx", "0x927c0", "0x186a0",
               "DrawBattleMap", "ddrawBattleMap", "PutTileBmp", "DrawAutoMapping", "MakeHitBox",
               "MakeAnimDisp", "getRouteMap", "updateMapArea", "setMapMovePoint", "setMapMovePoint2",
               "_setMapMovePoint", "_mapMove", "mapMove2", "_partyMapMove", "mapCheckSum",
@@ -184,7 +189,7 @@ jobs:
               "DrawBattleMap(", "initMap(", "createMap(", "setMap(", "writeMap(",
               "readMap(", "readHitMap(", "checkHitMap(", "checkEmptyMap(",
               "checkEmptyMapData(", "_checkEmptyMap(", "lssproto_S_recv(",
-              "lssproto_M_recv(", "lssproto_EN_recv(", "BattleProc(", "master(", "get_num(", "get_command_asc(", "set_damage_num(", "showDamage_num(", "damage_dispx(", "GetBinaryResource(",
+              "lssproto_M_recv(", "lssproto_EN_recv(", "BattleProc(", "master(", "get_num(", "get_command_asc(","BattleSetWazaHitBox(", "BattleProc(", "master(", "get_num(", "get_command_asc(", "set_damage_num(", "showDamage_num(", "damage_dispx(", "GetBinaryResource(",
               "CIniManage::ReadPatchInfo(", "UpdateAppNewVersion(", "realGetImage(",
               "decoder(", "SDL_main", "EventProc(", "GameMain(", "DispCallProc(",
               "networkLoop(", "Process(", "MouseProc(", "HitMouseCursor(",
@@ -270,27 +275,280 @@ jobs:
           echo "Unable to publish Android evidence after retries."
           exit 1
 
-      - name: Publish audit artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ro0000-android-apk-audit
-          path: |
-            artifacts/ro0000_android_apk_audit.json
-            artifacts/ro0000_android_native_elf_audit.json
-            ro0000/client/android/冰河石器-隐盟.apk
-            data/generated/stoneage_ro0000_android_adrn_crypto_contract.json
-            data/generated/stoneage_ro0000_android_native_resource_layout.json
-            data/generated/stoneage_ro0000_android_rd_decoder_contract.json
-            data/generated/stoneage_ro0000_android_battle_render_chain.json
-            data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
-            data/generated/stoneage_ro0000_android_map_prefetch_contract.json
-            data/generated/stoneage_ro0000_android_native_resource_focus.json
-            data/generated/stoneage_ro0000_android_adrn_consumer_triage.json
-            data/generated/stoneage_ro0000_android_lua_container_contract.json
-            data/generated/stoneage_ro0000_android_update_request_audit.json
-            data/generated/stoneage_ro0000_android_adrn_field_semantics_evidence.json
-            artifacts/ro0000_android_battlemap_selector_crosscheck.json
-            data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
-            artifacts/native/**/*.so
-          if-no-files-found: error
-          retention-days: 30
+name: Audit RO0000 Android client evidence
+
+on:
+  push:
+    paths:
+      - 'ro0000/client/android/冰河石器-隐盟.apk'
+      - 'tools/audit_ro0000_android_apk.py'
+      - 'tools/check_ro0000_android_adrn_field_semantics_evidence.py'
+      - 'data/generated/stoneage_ro0000_android_adrn_field_semantics_evidence.json'
+      - 'tools/check_ro0000_android_apk_audit.py'
+      - 'tools/audit_ro0000_android_native.py'
+      - 'tools/audit_ro0000_android_battlemap_crosscheck.py'
+      - 'tools/audit_ro0000_android_adrn_consumers.py'
+      - 'tools/check_ro0000_android_adrn_consumers.py'
+      - 'data/generated/stoneage_ro0000_android_battlemap_table_contract.json'
+      - 'tools/check_ro0000_android_battlemap_crosscheck.py'
+      - 'tools/audit_ro0000_battlemap_selector.mjs'
+      - 'ro0000/server/merged-source/gmsv/data/map/battlemap.txt'
+      - 'data/generated/stoneage_ro0000_battlemap_selector_audit.json'
+      - 'tools/check_ro0000_android_native.py'
+      - 'tools/check_ro0000_android_native_contracts.py'
+      - 'tools/check_ro0000_android_lua_container_contract.py'
+      - 'data/generated/stoneage_ro0000_android_lua_container_contract.json'
+      - 'src/stoneage_spr_decoder.mjs'
+      - 'tools/check_ro0000_android_spr_decoder.mjs'
+      - 'src/stoneage_client_asset_pack.mjs'
+      - 'tools/check_client_spr_asset_pack.mjs'
+      - 'data/generated/stoneage_ro0000_android_client_loop_contract.json'
+      - 'data/generated/stoneage_ro0000_android_map_movement_contract.json'
+      - 'data/generated/stoneage_ro0000_android_battle_command_decode_contract.json'
+      - 'data/generated/stoneage_ro0000_android_battle_waza_hitbox_contract.json'
+      - 'tools/check_ro0000_android_battle_waza_hitbox_contract.py'
+      - 'tools/check_ro0000_android_battle_command_contract.py'
+      - 'tools/check_ro0000_android_update_request_audit.py'
+      - 'data/generated/stoneage_ro0000_android_update_request_audit.json'
+      - '.github/workflows/audit-ro0000-android-client.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install multi-architecture disassembler
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes binutils-multiarch
+          objdump -i
+      - name: Test APK string scanner
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_apk_audit.py'
+      - name: Test native ELF audit parsers
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native.py'
+      - name: Test Android native contract validator
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native_contracts.py'
+      - name: Test Android battle command decoder contract
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_battle_command_contract.py'
+      - name: Test Android battle waza hitbox contract
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_battle_waza_hitbox_contract.py'
+      - name: Test Android Lua container contract
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_lua_container_contract.py'
+      - name: Test Android SPR/SPRADRN parser and target fixups
+        run: node tools/check_ro0000_android_spr_decoder.mjs
+      - name: Test authorized client sprite-shard asset loader
+        run: node tools/check_client_spr_asset_pack.mjs
+      - name: Audit APK archive and manifest
+        run: python3 tools/audit_ro0000_android_apk.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_apk_audit.json --baseline data/generated/stoneage_ro0000_android_apk_audit.json
+      - name: Test Android updater request audit
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_update_request_audit.py'
+      - name: Test Android ADRN field semantics evidence
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_adrn_field_semantics_evidence.py'
+      - name: Test Android ADRNBIN gameplay consumer triage
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_adrn_consumers.py'
+      - name: Audit embedded native ELF binaries
+        run: python3 tools/audit_ro0000_android_native.py --apk 'ro0000/client/android/冰河石器-隐盟.apk' --output artifacts/ro0000_android_native_elf_audit.json --extract-dir artifacts/native
+      - name: Regenerate current server battle-map selector audit
+        run: node tools/audit_ro0000_battlemap_selector.mjs
+      - name: Cross-check server battle-map candidates against Android filename table
+        run: |
+          python3 tools/audit_ro0000_android_battlemap_crosscheck.py \
+            --native-audit artifacts/ro0000_android_native_elf_audit.json \
+            --selector-audit data/generated/stoneage_ro0000_battlemap_selector_audit.json \
+            --table-contract data/generated/stoneage_ro0000_android_battlemap_table_contract.json \
+            --output artifacts/ro0000_android_battlemap_selector_crosscheck.json
+      - name: Audit Android ADRNBIN gameplay field consumers
+        run: python3 tools/audit_ro0000_android_adrn_consumers.py --native-audit artifacts/ro0000_android_native_elf_audit.json --output artifacts/stoneage_ro0000_android_adrn_consumer_triage.json
+      - name: Verify Android native loop and movement contracts
+        run: |
+          python3 tools/check_ro0000_android_native_contracts.py \
+            --native-audit artifacts/ro0000_android_native_elf_audit.json \
+            --loop-contract data/generated/stoneage_ro0000_android_client_loop_contract.json \
+            --movement-contract data/generated/stoneage_ro0000_android_map_movement_contract.json \
+            --resource-layout data/generated/stoneage_ro0000_android_native_resource_layout.json \
+            --battle-command-contract data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
+            --waza-hitbox-contract data/generated/stoneage_ro0000_android_battle_waza_hitbox_contract.json
+      - name: Publish focused APK evidence with retry
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          native = json.loads(Path("artifacts/ro0000_android_native_elf_audit.json").read_text(encoding="utf-8"))
+          dst = Path("artifacts/stoneage_ro0000_android_native_resource_focus.json")
+          keys = (
+              "setBlowFishKey", "fish_decode", "fopen", "fread", "fseek", "memcpy", "memmove",
+              "DownloadFile", "GetBinaryResource", "ReadPatchInfo", "DownLoadIniFile",
+              "UpdateAppNewVersion", "DownloadResource", "UnZipFile", "Patch_", "MD5", "URLCN",
+              "0x0c", "0x10", "0x14", "0x18", "0x1c", "0x1d", "0x1e", "0x20", "0x40", "0x42",
+              "0x5a433", "0x5a4b7", "0x5a515", "0x5a3e9", "0x5a3f6", "0x50", "0x31393839",
+              "adrn.bin", "real.bin", "spr.bin", "spradrn.bin", "ReadBattleMap", "StockDispBuffer",
+              "PutBmp", "LoadBmp", "decoder", "decoderPng", "ReadAniFile", "SpecAnim",
+              "play_map_bgm", "drawMap", "drawMap2", "drawMapUi", "redrawMap", "initMap",
+              "createMap", "setMap", "writeMap", "readMap", "readHitMap", "checkHitMap",
+              "checkEmptyMap", "checkEmptyMapData", "_checkEmptyMap", "setEventMemory",
+              "lssproto_S_recv", "lssproto_M_recv", "lssproto_EN_recv", "BattleProc", "master", "get_num", "get_command_asc","BattleSetWazaHitBox", "BattleProc", "master", "get_num", "get_command_asc", "set_damage_num", "showDamage_num", "damage_dispx", "0x927c0", "0x186a0",
+              "DrawBattleMap", "ddrawBattleMap", "PutTileBmp", "DrawAutoMapping", "MakeHitBox",
+              "MakeAnimDisp", "getRouteMap", "updateMapArea", "setMapMovePoint", "setMapMovePoint2",
+              "_setMapMovePoint", "_mapMove", "mapMove2", "_partyMapMove", "mapCheckSum",
+              "initWorldMap", "worldMapProc", "EndWarpMap", "setWarpMap", "mapWndProc", "drawAutoMap",
+              "createAutoMap", "initAutoMapColor", "makeAutoMapColor", "getAutoMapColor",
+              "readAutoMapColor", "writeAutoMapColor", "mapEffect", "MapEffect", "HotUpdatePutbmp",
+              "InitSpriteInfo", "FreeGetBattleMap", "cleanupRealbin", "InitPteernSeparationBin",
+              "loadResources", "initResources", "myluaload", "LoadStoneAgeLUA",
+              "SDL_main", "EventProc", "GameMain", "DispCallProc", "networkLoop",
+              "ScriptRunningProcess", "Process", "MouseProc", "HitMouseCursor",
+              "KeyboardReturn", "keyBoardProcWnd", "moveProc", "onceMoveProc",
+              "partyMoveProc", "_execEtcEvent", "_etcEventCheck", "_sendWarpEvent",
+              "_sendEnemyEvent", "_checkWarpEvent", "_checkEnemyEvent", "callbackKeyboardChange",
+              "InitGame", "SystemTask", "EndGame", "networkLoop", "EventProc",
+              "KeyboardReturn", "MouseNowPoint", "MouseCrick", "MouseDblCrick",
+              "GetRealX", "GetRealY", "getAutoAct", "StopAutoWalk", "PeekNextPostion",
+              "GetNextPostion", "CheckOnWarpPoint", "CheckCurrentGuideRealPosition",
+              "_sendMoveRoute", "lssproto_AC_send", "lssproto_EV_send", "lssproto_M_send",
+              "_sendEncount", "_checkEncount",
+          )
+          focus = {"format":"ro0000-android-native-resource-focus-v1","workflowRunId":int(os.environ["RUN_ID"]),"sourceCommit":os.environ["SOURCE_SHA"],"apkSha256":native["auditedApk"]["sha256"],"libraries":[]}
+          for lib in native.get("nativeLibraries", []):
+              selected=[]
+              selected_objects=[]
+              for fn in lib.get("focusedSymbols", []):
+                  symbol_type = fn.get("type")
+                  if symbol_type in ("OBJECT", "NOTYPE"):
+                      selected_objects.append({"name":fn.get("name"),"type":symbol_type,"value":fn.get("value"),"size":fn.get("size")})
+                      continue
+                  if symbol_type != "FUNC":
+                      continue
+                  dis=fn.get("disassembly") or {}
+                  lines=dis.get("excerpt", [])
+                  flow_re = re.compile(r"\b(?:call\w*|j[a-z]{1,3}|blx?|bx|cbz|cbnz|cmp\w*|test\w*)\b", re.IGNORECASE)
+                  selected.append({"name":fn.get("name"),"value":fn.get("value"),"size":fn.get("size"),"disassemblyStatus":dis.get("status"),"instructionLineCount":dis.get("instructionLineCount"),"disassemblyLineCount":dis.get("disassemblyLineCount"),"disassemblySha256":dis.get("disassemblySha256"),"excerptTruncated":dis.get("excerptTruncated"),"resourceRelevantLines":[line for line in lines if any(k.lower() in line.lower() for k in keys)],"controlFlowLines":[line for line in lines if flow_re.search(line)]})
+              if selected or selected_objects:
+                  focus["libraries"].append({"path":lib.get("path"),"abi":lib.get("abi"),"buildId":lib.get("buildId"),"sha256":lib.get("sha256"),"functions":selected,"objects":selected_objects})
+          # Compare function and object inventories across the two target ABIs.
+          abi_names = {lib.get("abi"): {
+              re.sub(r"\s+", " ", fn.get("demangled") or fn.get("name") or "").strip()
+              for fn in lib.get("focusedSymbols", []) if fn.get("type") == "FUNC"
+          } for lib in native.get("nativeLibraries", [])}
+          abi_objects = {lib.get("abi"): {
+              item.get("name") for item in lib.get("focusedSymbols", [])
+              if item.get("type") in ("OBJECT", "NOTYPE")
+          } for lib in native.get("nativeLibraries", [])}
+          abi_labels = sorted(abi_names)
+          focus["abiFunctionComparison"] = {
+              "abis": abi_labels,
+              "sameFocusedFunctionSet": len(abi_labels) == 2 and abi_names[abi_labels[0]] == abi_names[abi_labels[1]],
+              "onlyInFirst": sorted(abi_names[abi_labels[0]] - abi_names[abi_labels[1]]) if len(abi_labels) == 2 else [],
+              "onlyInSecond": sorted(abi_names[abi_labels[1]] - abi_names[abi_labels[0]]) if len(abi_labels) == 2 else [],
+              "note": "Name-set parity only; instruction semantics still require ABI-aware comparison."
+          }
+          focus["abiObjectComparison"] = {
+              "sameFocusedObjectSet": len(abi_labels) == 2 and abi_objects.get(abi_labels[0]) == abi_objects.get(abi_labels[1]),
+              "onlyInFirst": sorted(abi_objects.get(abi_labels[0], set()) - abi_objects.get(abi_labels[1], set())) if len(abi_labels) == 2 else [],
+              "onlyInSecond": sorted(abi_objects.get(abi_labels[1], set()) - abi_objects.get(abi_labels[0], set())) if len(abi_labels) == 2 else [],
+              "note": "Global object-name parity only; sizes and addresses can differ by ABI."
+          }
+          core = (
+              "AdrnInit(", "InitSprBinFileOpen(", "InitPteernSeparationBin(",
+              "LoadSprbin(", "cleanupRealbin(", "ReadBattleMap(", "drawMap(",
+              "DrawBattleMap(", "initMap(", "createMap(", "setMap(", "writeMap(",
+              "readMap(", "readHitMap(", "checkHitMap(", "checkEmptyMap(",
+              "checkEmptyMapData(", "_checkEmptyMap(", "lssproto_S_recv(",
+              "lssproto_M_recv(", "lssproto_EN_recv(", "BattleProc(", "master(", "get_num(", "get_command_asc(","BattleSetWazaHitBox(", "BattleProc(", "master(", "get_num(", "get_command_asc(", "set_damage_num(", "showDamage_num(", "damage_dispx(", "GetBinaryResource(",
+              "CIniManage::ReadPatchInfo(", "UpdateAppNewVersion(", "realGetImage(",
+              "decoder(", "SDL_main", "EventProc(", "GameMain(", "DispCallProc(",
+              "networkLoop(", "Process(", "MouseProc(", "HitMouseCursor(",
+              "KeyboardReturn(", "keyBoardProcWnd(", "moveProc(", "onceMoveProc(",
+              "partyMoveProc(", "_execEtcEvent(", "_etcEventCheck(", "_sendWarpEvent(",
+              "_sendEnemyEvent(", "_checkWarpEvent(", "_checkEnemyEvent(",
+              "Java_com_newssa_stoneage_ko_JNILibrary_callbackKeyboardChange",
+              "InitGame(", "SystemTask(", "EndGame(", "checkGuildBoxHit(",
+              "InitShapeClickStatus(", "RealTimeToSATime(", "NextScrollPanelRender(",
+              "stockDispBtnCls(", "joy_read(", "DoNormalCallback(", "PaletteProc(",
+              "Flip(", "InitSurfaceInfo(", "repairMap(", "getAutoAct(", "StopAutoWalk(",
+              "PeekNextPostion(", "GetNextPostion(", "CheckOnWarpPoint(",
+              "CheckCurrentGuideRealPosition(", "_sendMoveRoute(",
+              "lssproto_AC_send(", "lssproto_EV_send(", "lssproto_M_send(",
+              "_sendEncount(", "_checkEncount(",
+          )
+          focus["coreFunctionCoverage"] = {abi: {
+              "complete": all(any(name.startswith(prefix) for name in names) for prefix in core),
+              "missing": [prefix for prefix in core if not any(name.startswith(prefix) for name in names)]
+          } for abi, names in abi_names.items()}
+          # Ensure every function/object selected by the native auditor is actually published.
+          published_by_abi = {lib.get("abi"): lib for lib in focus["libraries"]}
+          focus["publishedSymbolCoverage"] = {}
+          for lib in native.get("nativeLibraries", []):
+              abi = lib.get("abi")
+              source_functions = {fn.get("name") for fn in lib.get("focusedSymbols", []) if fn.get("type") == "FUNC"}
+              source_objects = {fn.get("name") for fn in lib.get("focusedSymbols", []) if fn.get("type") in ("OBJECT", "NOTYPE")}
+              published = published_by_abi.get(abi, {})
+              published_functions = {fn.get("name") for fn in published.get("functions", [])}
+              published_objects = {fn.get("name") for fn in published.get("objects", [])}
+              disassembly_complete = all(
+                  fn.get("disassemblyStatus") == "ok" and not fn.get("excerptTruncated", False)
+                  for fn in published.get("functions", [])
+              )
+              focus["publishedSymbolCoverage"][abi] = {
+                  "functionSymbolCount": len(source_functions),
+                  "publishedFunctionCount": len(published_functions),
+                  "missingFunctions": sorted(source_functions - published_functions),
+                  "extraFunctions": sorted(published_functions - source_functions),
+                  "objectSymbolCount": len(source_objects),
+                  "publishedObjectCount": len(published_objects),
+                  "missingObjects": sorted(source_objects - published_objects),
+                  "extraObjects": sorted(published_objects - source_objects),
+                  "allFunctionDisassemblyComplete": disassembly_complete,
+                  "complete": (
+                      source_functions == published_functions
+                      and source_objects == published_objects
+                      and disassembly_complete
+                  )
+              }
+          if not focus["abiFunctionComparison"]["sameFocusedFunctionSet"]:
+              raise SystemExit("Focused native function names differ across target ABIs; review before publishing.")
+          if not focus["abiObjectComparison"]["sameFocusedObjectSet"]:
+              raise SystemExit("Focused native object names differ across target ABIs; review before publishing.")
+          if not all(item["complete"] for item in focus["publishedSymbolCoverage"].values()):
+              raise SystemExit("Focused native symbol publication or disassembly is incomplete.")
+          if not all(item["complete"] for item in focus["coreFunctionCoverage"].values()):
+              raise SystemExit("Core Android map/resource native function coverage is incomplete: " + json.dumps(focus["coreFunctionCoverage"], sort_keys=True))
+          dst.write_text(json.dumps(focus, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
+
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp artifacts/ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json
+            cp artifacts/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_native_resource_focus.json
+            cp artifacts/stoneage_ro0000_android_adrn_consumer_triage.json data/generated/stoneage_ro0000_android_adrn_consumer_triage.json
+            git add data/generated/stoneage_ro0000_android_native_resource_focus.json data/generated/stoneage_ro0000_android_battlemap_selector_crosscheck.json data/generated/stoneage_ro0000_android_adrn_consumer_triage.json
+            if git diff --cached --quiet; then
+              echo "Generated Android evidence is already current."
+              exit 0
+            fi
+            git commit -m "[docs] publish game-useful Android resource evidence"
+            if git push origin HEAD:main; then
+              echo "Published Android evidence."
+              exit 0
+            fi
+            echo "Push raced; retrying against latest main (attempt $attempt)."
+          done
+          echo "Unable to publish Android evidence after retries."
+          exit 1
+
