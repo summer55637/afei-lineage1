@@ -1,0 +1,25 @@
+name: Check V4.70 browser battle auto full lifecycle
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_battle_auto_lifecycle_runtime.mjs'
+      - 'src/stoneage_browser_battle_auto_runtime.mjs'
+      - 'tools/check_v470_browser_battle_auto_full_lifecycle.mjs'
+      - '.github/workflows/check-v470-browser-battle-auto-full-lifecycle.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.70 full lifecycle regression
+        run: node tools/check_v470_browser_battle_auto_full_lifecycle.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_auto_lifecycle_runtime.mjs
+          node --check src/stoneage_browser_battle_auto_runtime.mjs
+          node --check tools/check_v470_browser_battle_auto_full_lifecycle.mjs
