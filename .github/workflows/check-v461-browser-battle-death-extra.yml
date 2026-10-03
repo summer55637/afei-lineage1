@@ -1,0 +1,36 @@
+name: Check V4.61 browser battle death extra
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_battle_death_extra_runtime.mjs'
+      - 'src/stoneage_browser_battle_death_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_profit_credit_runtime.mjs'
+      - 'src/stoneage_browser_battle_attack_sequence_runtime.mjs'
+      - 'src/stoneage_browser_battle_counter_chain_runtime.mjs'
+      - 'src/stoneage_browser_battle_round_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'src/stoneage_browser_battle_context_runtime.mjs'
+      - 'tools/check_v461_browser_battle_death_extra.mjs'
+      - '.github/workflows/check-v461-browser-battle-death-extra.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.61 death-extra regression
+        run: node tools/check_v461_browser_battle_death_extra.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_death_extra_runtime.mjs
+          node --check src/stoneage_browser_battle_death_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_profit_credit_runtime.mjs
+          node --check src/stoneage_browser_battle_attack_sequence_runtime.mjs
+          node --check src/stoneage_browser_battle_counter_chain_runtime.mjs
+          node --check src/stoneage_browser_battle_round_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check src/stoneage_browser_battle_context_runtime.mjs
+          node --check tools/check_v461_browser_battle_death_extra.mjs
