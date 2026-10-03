@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：f1a85aa — fix: derive README milestones from implemented runtimes
-- 更新時間：2026-10-03T22:47:02+08:00
+- 最新 commit：8e05960 — docs: expose V4.71 and V4.72 references in README generator
+- 更新時間：2026-10-03T23:40:00+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.72
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -48,6 +48,8 @@
 - [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)
 - [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)
     - [V4.26 Battle damage commit](docs/reference/v426-browser-battle-damage-commit.md)
+- [V4.71 Browser World Idle Loop](docs/reference/v471-browser-world-idle-loop.md)
+- [V4.72 Browser Idle Supply](docs/reference/v472-browser-idle-supply.md)
 - [Android battle-map 33×33 lineage audit](docs/reference/ro0000-android-battle-map-lineage-audit.md)
 - [Generated state / evidence](data/generated/)
 
