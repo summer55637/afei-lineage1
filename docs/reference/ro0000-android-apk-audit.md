@@ -787,3 +787,51 @@ Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_statu
 `lssproto_B_recv(C)` → `BattleStatus ring` → `set_bc()` → `statusId` → `set_single_jujutsu()` → `katino()` → status effect ACTION / sprite / lifecycle。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_status_effect_contract.json`。
+
+
+## Battle command ring → master parser → damage result application
+
+這一輪把普通戰鬥命令的讀取端、命令邊界解析與結果套用再向下閉合。目標是描述 APK 客戶端實際消費哪些欄位；不把客戶端動畫／狀態更新誤認為伺服器戰鬥公式。
+
+### Function anchors and receive queue
+
+- target x86：`BattleProc()` 位於 `0x10c790`（9,590 bytes）、`master(action*)` 位於 `0x359eb0`（17,284 bytes）、`get_num()` 位於 `0x3408e0`（408 bytes）、`get_command_asc()` 位於 `0x347740`（500 bytes）。
+- ARMv7a 對應符號：`BattleProc()` `0x0f69c1`（6,364 bytes）、`master(action*)` `0x234eb1`（9,348 bytes）、`get_num()` `0x22753d`（252 bytes）、`get_command_asc()` `0x22b1a1`（332 bytes）。ARM 函式值含 Thumb state bit；此處記錄符號值，語義核對以 target x86 指令為主。
+- 普通命令由 `lssproto_B_recv()` default branch 寫入獨立的 `BattleCmdBak`：4 個槽位、每槽 0x1000 bytes。target `BattleProc()` 在讀寫指標不同時複製一槽到 `BattleCmd`，再以 `(readPointer+1)&3` 推進讀指標。
+- 這條 queue 與 `C` branch 的 BattleStatus ring 分離；後者仍由 `set_bc()` 解碼。普通命令被搬到 `BattleCmd` 後，才由戰鬥 master action 消費。
+
+### Command and token parsing
+
+- target 的 `master(action*)` 內含 local `get_command()`，x86 位於 `0x35e240`（相對 master 起點 `+0x4390`，不是獨立匯出的函式）。它在命令邊界尋找 `B<opcode>|`：`B` 前一 byte 必須是 `|` 或字串起始／NUL 邊界；找到後回傳 opcode byte，掃描時遇到 NUL 則回傳 -1。
+- `get_num()` 以大寫十六進位 nibble 累積數值。開始解析前會略過非十六進位字元；解析開始後遇到非十六進位字元即結束 token，游標留給呼叫端按格式處理。輸入在數字前即遇 NUL 時回傳 -1。
+- `get_command_asc()` 將文字讀入 4 個、每個 128 bytes 的緩衝區。TAB 結束目前欄位並切換下一格；`|` 或 NUL 結束讀取。其 byte-copy 分支依首 byte 高位形態複製 1、2 或 3 bytes，屬舊式多位元組字元處理，不是通用 UTF-8 decoder。
+- 上述兩個 parser 在觀察到的 native 路徑中沒有明確的 token／欄位長度上限檢查。重建端應採有界解析並對不合法輸入 fail-closed，不應照搬可能越界的讀取方式。
+
+### Target-observed command dispatch
+
+`master()` 依 `get_command()` 回傳的 opcode 更新 ACTION 與戰鬥表現。target binary 可直接觀察到下列處理路徑：
+
+| Opcode | Target 觀察到的處理 |
+|---|---|
+| `K` | 建立／更新戰鬥文字視窗，透過 `get_command_asc()` 讀取最多四個 TAB 欄位，並播放 sound 202。 |
+| `j` | 存在戰鬥效果分支；具體效果仍受編譯功能路徑限制。 |
+| `b` | battle-model 路徑會初始化參與者的 ACTION／攻擊表現資料並建立或重用攻擊 ACTION。 |
+| `V` | 當先前解析的索引走出一般參與者範圍時，進入變數更新路徑。 |
+| `M` | malfunction／status-result 路徑，會更新參與者狀態並依分支建立或移除狀態 ACTION。 |
+| `D` | 傷害／結果套用路徑；`ATT_DAMAGE` 名稱由固定版本的公開 source 作語義交叉參考，非 target APK 的版本身分宣告。 |
+
+### D result records and local state changes
+
+- `D` 命令會先解析目標參與者，再解析結果 category、subtype 與數值。客戶端消費伺服器提供的結果數值，對 ACTION 的 HP、MP、寵物 HP 與顯示狀態作本地更新；這段 consumer 沒有提供權威命中／傷害計算公式。
+- target category 0 / subtype 0：顯示 popup 6，扣除 participant HP 與可選 pet damage，HP／寵物 HP 低於等於 0 時歸零，並處理 hit mark、受傷動畫及相應的 pet-fall 轉換。
+- category 0 / subtype 1：顯示 popup 14，回補 HP 與可選寵物數值，分別限制在 max HP／max pet HP，並播放 sound 102。
+- category 0 / subtype 2：顯示 popup 36；回補 HP、套用該路徑的可選 MP 數值並回補寵物數值，回補上限由對應 max 欄位限制。
+- category 0 / subtype 3–6：顯示 popup 37–40，重置動畫狀態並進入結果動畫流程；在這些分支中未觀察到 HP／MP 數值寫入。target 還有其他條件式 popup 分支，但未把其功能名稱從外部語義推定成 target 已證實行為。
+- category 1 / subtype 0：顯示 popup 16，扣除 MP 並限制下限為 0。
+- category 1 / subtype 1：顯示 popup 15，回補 MP；公開語義參考中的 `_FIXSHOWMPERR` 路徑使用 `pc.maxMp`，否則限制於 100，並播放 sound 102。這項編譯條件名稱僅作交叉參考。
+- target 在處理一筆 `D` 結果後，會探測下一個命令。若下一筆仍是 `D` 且 category／subtype 與目前群組相同，就回到結果迴圈處理下一位參與者；否則恢復命令游標，把下一命令留給外層 state machine。這是連續同類結果的合併消費，不代表伺服器只送出一筆傷害。
+- 寵物數值欄位與部分特殊結果的具體協議意義仍需以 target 行為和實際封包樣本交叉核驗；目前不從欄位名稱反推 server-side 計算方式。
+
+公開 `alrightlook/StoneAgeMobileApp` 的 `oft.cpp`（commit `8c870c87ce1305c52fb6713bf824619467847bba`）僅作 `ATT_DAMAGE`、結果類別與可選功能的語義對照，未宣稱與 target APK 同一來源版本。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_command_decode_contract.json`。契約會在 CI 中對照 APK／ELF identity 及 x86、ARMv7a 函式位址。
