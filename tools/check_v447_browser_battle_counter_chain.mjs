@@ -10,6 +10,7 @@ import { createBrowserBattleCriticalDamageRuntime } from '../src/stoneage_browse
 import { createBrowserBattleDamageReactRuntime } from '../src/stoneage_browser_battle_damage_react_runtime.mjs';
 import { createBrowserBattleDamageReactCommitRuntime } from '../src/stoneage_browser_battle_damage_react_commit_runtime.mjs';
 import { createBrowserBattleDamageDeathChainRuntime } from '../src/stoneage_browser_battle_damage_death_chain_runtime.mjs';
+import { createBrowserBattleProfitCreditRuntime } from '../src/stoneage_browser_battle_profit_credit_runtime.mjs';
 
 const entry=(bid,sourceType)=>({
   bid,
@@ -54,6 +55,7 @@ const context={
 };
 
 const runtimes={
+  profitCreditRuntime:createBrowserBattleProfitCreditRuntime(),
   counterRuntime:createBrowserBattleCounterRuntime(),
   attackSeqPreludeRuntime:createBrowserBattleAttackSeqPreludeRuntime(),
   damagePlanRuntime:createBrowserBattleDamagePlanRuntime(),
