@@ -15,9 +15,12 @@ function allEnemyEntries(context){
   return entries.map((entry,slot)=>({entry,bid:slot+SIDE_OFFSET,slot})).filter(x=>x.entry);
 }
 
-function isEnemyDead(entry){
+function isEnemyDead(entry,{allowCommittedDeath=false}={}){
   const hp=toInt(entry?.hp);
-  return hp!=null&&hp<=0&&entry?.isDie!==true&&entry?.dead!==true;
+  if(hp==null||hp>0)return false;
+  if(entry?.sourceRewardProcessed===true)return false;
+  if(allowCommittedDeath===true)return true;
+  return entry?.isDie!==true&&entry?.dead!==true;
 }
 
 function normalizeCreditBids(bids){
@@ -35,6 +38,7 @@ function normalizeCreditBids(bids){
 function applyBattleProfitCredit(context,{
   attackerBids=[],
   allowPlayerCredit=true,
+  allowCommittedDeath=false,
   hitIndex=null,
   source='attack',
   transactionPrefix='profit',
@@ -55,7 +59,7 @@ function applyBattleProfitCredit(context,{
 
   for(const row of allEnemyEntries(next)){
     const enemy=row.entry;
-    if(!isEnemyDead(enemy))continue;
+    if(!isEnemyDead(enemy,{allowCommittedDeath:allowCommittedDeath===true}))continue;
     if(enemy.sourceRewardProcessed===true)continue;
 
     enemy.sourceRewardProcessed=true;
@@ -100,6 +104,7 @@ function applyBattleProfitCredit(context,{
     totalCreditEvents:events.length,
     rewardNumbersDeferred:true,
     carriedLootRngDeferred:true,
+    committedDeathAdapter:allowCommittedDeath===true,
     expMutation:false,
     goldMutation:false,
     persistentMutation:false,
