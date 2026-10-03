@@ -144,7 +144,8 @@ async function resolveBattleRound(context,{
   roundId='',
   defaultTargetRollByBid={},
   sourceTargetRollByBid={},
-  now=null
+  now=null,
+  runtimes={}
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-context-required'};
   if(String(context.context.mode??'').trim().toLowerCase()!=='battle'||int(context.context.sourceMode)!==BATTLE_MODE_BATTLE){
@@ -155,6 +156,48 @@ async function resolveBattleRound(context,{
   }
   const id=String(roundId??'').trim();
   if(!id||id.length>128)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'round-id-required'};
+
+  const runtimeNames=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageDeathChainRuntime','statusRuntime','endRuntime'];
+  const missingRuntime=runtimeNames.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
+  if(missingRuntime){
+    return {
+      ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,
+      reason:'battle-round-runtime-dependency-invalid',dependency:missingRuntime
+    };
+  }
+  const processStatus=(wrapper,bid,cursor)=>{
+    try{
+      return runtimes.statusRuntime.process(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper.context)},
+        {
+          battleBid:bid,
+          randomInt:(minimum,maximum)=>{
+            const next=nextRandom(cursor,minimum,maximum);
+            if(!next.ok)throw Object.assign(new Error(next.reason),next);
+            return next.roll;
+          }
+        }
+      );
+    }catch(error){
+      return {
+        ok:false,
+        handled:false,
+        stage:'battle-status',
+        reason:String(error?.reason??error?.message??'status-rng-failed'),
+        battleBid:bid,
+        rngCursor:error?.cursor??cursor?.cursor??0,
+        rngMinimum:error?.minimum??null,
+        rngMaximum:error?.maximum??null
+      };
+    }
+  };
+  const resolveAttackPreflight=({context:wrapper},options)=>runtimes.attackPreflightRuntime.preflight({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
+  const runAttackPrelude=({context:wrapper},options)=>runtimes.attackSeqPreludeRuntime.run({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
+  const runDamagePlan=({context:wrapper},options)=>runtimes.damagePlanRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
+  const runCriticalDamagePlan=({context:wrapper},options)=>runtimes.criticalDamageRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
+  const runDamageReactPlan=({context:wrapper},options)=>runtimes.damageReactRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
+  const commitDamageDeathChain=({context:wrapper},options)=>runtimes.damageDeathChainRuntime.commit({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
+  const planBattleEnd=(wrapper)=>runtimes.endRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper.context??wrapper)});
 
   const bundles=bundleMap(attackRolls);
   if(!bundles.ok)return {...bundles,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE};
@@ -450,21 +493,7 @@ function createBrowserBattleRoundRuntime({
     if(!runtime||runtime.ok!==true)throw new Error(name+'-required');
   }
 
-  function processStatus(context,battleBid,cursor){
-    try{
-      return statusRuntime.process(
-        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(context.context)},
-        {
-          battleBid,
-          randomInt:(minimum,maximum)=>{
-            const next=nextRandom(cursor,minimum,maximum);
-            if(!next.ok)throw Object.assign(new Error(next.reason),next);
-            return next.roll;
-          }
-        }
-      );
-    }catch(error){
-      return {
+  return {
         ok:false,
         handled:false,
         stage:'battle-status',
@@ -526,7 +555,19 @@ function createBrowserBattleRoundRuntime({
   return {
     ok:required.every(([,runtime])=>runtime?.ok===true),
     format:BROWSER_BATTLE_ROUND_RUNTIME_FORMAT,
-    resolve:(context,options={})=>resolveBattleRound(context,options)
+    resolve:(context,options={})=>resolveBattleRound(context,{
+      ...options,
+      runtimes:{
+        attackPreflightRuntime,
+        attackSeqPreludeRuntime,
+        damagePlanRuntime,
+        criticalDamageRuntime,
+        damageReactRuntime,
+        damageDeathChainRuntime,
+        statusRuntime,
+        endRuntime
+      }
+    })
   };
 }
 
