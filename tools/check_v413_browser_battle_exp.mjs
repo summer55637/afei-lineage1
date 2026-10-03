@@ -52,11 +52,13 @@ const expCap=applyBattleExpFormula({workGetExp:1000000000,level:1,currentExp:100
 assert.equal(expCap.nextExp,1224160000);
 assert.equal(expCap.expCapApplied,true);
 
-const mismatchState=freshPersistentState({now,playerId:'p1'});
-mismatchState.player.level=10;
-mismatchState.player.workGetExp=9;
-const mismatch=planBattleExp(battleContext,mismatchState);
-assert.equal(mismatch.ok,false);
-assert.equal(mismatch.reason,'player-workgetexp-mismatch');
+const transientState=freshPersistentState({now,playerId:'p1'});
+transientState.player.level=10;
+transientState.player.workGetExp=9;
+const transient=planBattleExp(battleContext,transientState);
+assert.equal(transient.ok,true,JSON.stringify(transient));
+assert.equal(transient.player.workGetExp,2);
+assert.equal(transient.player.persistentWorkGetExpBefore,9);
+assert.equal(transient.player.workGetExpSource,'battle-context-transient');
 
 console.log('V4.13 Browser Battle EXP plan regression: PASS');
