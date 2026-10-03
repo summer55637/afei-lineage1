@@ -169,6 +169,47 @@ assert.equal(result.context.sides[0].entries[0].workGetExp,100);
 assert.equal(result.context.sides[0].entries[0].isDie,false);
 assert.equal(result.persistentMutation,false);
 
+const orderContext={
+  format:'stoneage-browser-battle-context-runtime-v1',
+  context:{
+    mode:'battle',sourceMode:2,norisk:0,dpbattle:0,
+    finishHookProfile:{
+      auditFormat:'stoneage-battle-finish-hook-audit-v1',
+      profile:'ordinary-world-encounter',
+      winFuncInjected:false,pkFuncInjected:false,dantai:false,linkedBattleCount:0
+    },
+    sourcePlayerItemSlotsSnapshot:[400,...Array(23).fill(null)],
+    sourcePlayerRelifeCandidates:[{
+      playerSlot:0,existingIndex:400,itemId:20131,itemName:'Relife',
+      relifeFunc:'ITEM_DIErelife',equipPlace:1,hpArgument:200
+    }],
+    sourceRelifeConsumedExistingIndexes:[],
+    sourceRelifeEvents:[],
+    sides:[
+      {side:0,type:0,entries:[
+        {bid:0,sourceType:'player',characterId:'p1',level:10,hp:0,maxHp:300,isDie:true,
+         charm:20,variableAi:0,deadCount:1,ultimate:0,sourceAddProfitDeathPending:true,sourceDeathExtraProcessed:false}
+      ]},
+      {side:1,type:1,entries:Array(10).fill(null)}
+    ]
+  }
+};
+const relifeFirst=relifeRuntime.apply(orderContext,{trigger:'fixed-c-re-life-before-add-profit'});
+assert.equal(relifeFirst.ok,true,JSON.stringify(relifeFirst));
+assert.equal(relifeFirst.applied,true);
+assert.equal(relifeFirst.context.sides[0].entries[0].hp,200);
+assert.equal(relifeFirst.context.sides[0].entries[0].isDie,false);
+assert.equal(relifeFirst.context.sourceRelifeEvents.length,1);
+
+const postRelifeProfit=profitCreditRuntime.apply(
+  {format:'stoneage-browser-battle-context-runtime-v1',context:relifeFirst.context},
+  {attackerBids:[10],allowPlayerCredit:false,allowCommittedDeath:true,hitIndex:0,source:'ordering-check'}
+);
+assert.equal(postRelifeProfit.ok,true,JSON.stringify(postRelifeProfit));
+assert.equal(postRelifeProfit.deathExtra.newEvents.length,0);
+assert.equal(postRelifeProfit.context.sides[0].entries[0].charm,20);
+assert.equal(postRelifeProfit.context.sides[0].entries[0].variableAi,0);
+
 console.log(JSON.stringify({
   pass:true,
   format:'stoneage-v465-browser-battle-basic-single-hit-reward-chain-v1',
