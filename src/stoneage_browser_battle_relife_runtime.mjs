@@ -102,13 +102,13 @@ function applyBattleRelife(context,{
   if(!player)return {ok:false,handled:false,stage:'battle-relife',action:ACTION_BATTLE_RELIFE_APPLY,reason:'player-battle-entry-required'};
   const hp=intOr(player.hp,null),maxHp=intOr(player.maxHp,null);
   if(hp==null||maxHp==null||maxHp<=0)return {ok:false,handled:false,stage:'battle-relife',action:ACTION_BATTLE_RELIFE_APPLY,reason:'player-hp-runtime-required'};
-  if(hp>0||player.isDie!==true)return {ok:true,handled:true,stage:'battle-relife-skipped-alive',format:BROWSER_BATTLE_RELIFE_RUNTIME_FORMAT,action:ACTION_BATTLE_RELIFE_APPLY,trigger,rngConsumed:0,persistentMutation:false,context:clone(context.context)};
-  if((intOr(player.ultimate,0)??0)>0)return {ok:true,handled:true,stage:'battle-relife-skipped-ultimate',format:BROWSER_BATTLE_RELIFE_RUNTIME_FORMAT,action:ACTION_BATTLE_RELIFE_APPLY,trigger,rngConsumed:0,persistentMutation:false,context:clone(context.context),reason:'ultimate-death-excluded-by-BATTLE_getBattleDieIndex'};
+  if(hp>0||player.isDie!==true)return {ok:true,handled:true,stage:'battle-relife-skipped-alive',format:BROWSER_BATTLE_RELIFE_RUNTIME_FORMAT,action:ACTION_BATTLE_RELIFE_APPLY,trigger,rngConsumed:0,applied:false,persistentMutation:false,context:clone(context.context)};
+  if((intOr(player.ultimate,0)??0)>0)return {ok:true,handled:true,stage:'battle-relife-skipped-ultimate',format:BROWSER_BATTLE_RELIFE_RUNTIME_FORMAT,action:ACTION_BATTLE_RELIFE_APPLY,trigger,rngConsumed:0,applied:false,persistentMutation:false,context:clone(context.context),reason:'ultimate-death-excluded-by-BATTLE_getBattleDieIndex'};
   if(player.sourceDeathExtraProcessed!==true)return {ok:false,handled:false,stage:'battle-relife',action:ACTION_BATTLE_RELIFE_APPLY,reason:'death-extra-must-run-before-relife'};
   const candidates=Array.isArray(context.context.sourcePlayerRelifeCandidates)?context.context.sourcePlayerRelifeCandidates:[];
   const consumed=new Set((Array.isArray(context.context.sourceRelifeConsumedExistingIndexes)?context.context.sourceRelifeConsumedExistingIndexes:[]).map(v=>intOr(v,-1)));
   const candidate=candidates.find(row=>!consumed.has(intOr(row?.existingIndex,-1)))??null;
-  if(!candidate)return {ok:true,handled:true,stage:'battle-relife-skipped-no-source-item',format:BROWSER_BATTLE_RELIFE_RUNTIME_FORMAT,action:ACTION_BATTLE_RELIFE_APPLY,trigger,rngConsumed:0,persistentMutation:false,context:clone(context.context),reason:'no-valid-source-backed-player-relife-item'};
+  if(!candidate)return {ok:true,handled:true,stage:'battle-relife-skipped-no-source-item',format:BROWSER_BATTLE_RELIFE_RUNTIME_FORMAT,action:ACTION_BATTLE_RELIFE_APPLY,trigger,rngConsumed:0,applied:false,persistentMutation:false,context:clone(context.context),reason:'no-valid-source-backed-player-relife-item'};
   if(intOr(playerItemRef(context,candidate.playerSlot),-1)!==intOr(candidate.existingIndex,-1)){
     return {ok:false,handled:false,stage:'battle-relife',action:ACTION_BATTLE_RELIFE_APPLY,reason:'relife-existing-item-slot-mismatch',playerSlot:candidate.playerSlot,existingIndex:candidate.existingIndex};
   }
