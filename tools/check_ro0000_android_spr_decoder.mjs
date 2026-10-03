@@ -95,7 +95,7 @@ assert.equal(parseSprAnimationPack(
   wrappedIndex.subarray(3, 3 + basic.indexBytes.length),
   wrappedSpr.subarray(4, 4 + basic.sprBytes.length),
 ).sprites[0].animations[0].frames[1].bmpNo, 43);
-assert.equal(parseSprAnimationPack(new Uint8Array(12), new Uint8Array(0)).sprites.length, 0);
+assert.equal(parseSprAnimationPack(new Uint8Array(0), new Uint8Array(0)).sprites.length, 0);
 
 // Sprite namespace bounds and malformed input admission.
 for (const sprNo of [100000, 139999]) {
