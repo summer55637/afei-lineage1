@@ -119,7 +119,7 @@ function commitBattlePlayerExit(state,plan,{transactionId=null,expectedRevision=
   };
 }
 
-function resolveBattlePlayerExitForSettlement(state,{settlementReceiptId=null,settlementStartRevision=null,settlementReceiptRevision=null,playerId=null}={}){
+function resolveBattlePlayerExitForSettlement(state,{settlementReceiptId=null,settlementStartRevision=null,settlementReceiptRevision=null,playerId=null,allowPetExitStateSync=false}={}){
   const id=String(settlementReceiptId??'').trim();
   if(!id)return {ok:false,reason:'settlement-receipt-binding-required'};
   const bucket=state?.runtimeMeta?.[TRANSACTION_BUCKET];
@@ -138,7 +138,18 @@ function resolveBattlePlayerExitForSettlement(state,{settlementReceiptId=null,se
     const before=intOr(record.revisionBefore,null);
     if(before==null||before<expectedReceipt)continue;
     const after=intOr(record.revisionAfter,null);
-    if(after==null||after<=expectedReceipt||after!==currentRevision)continue;
+    if(after==null||after<=expectedReceipt)continue;
+    if(after!==currentRevision){
+      if(!allowPetExitStateSync)continue;
+      const petBucket=state.runtimeMeta?.battlePetExitStateTransactions;
+      const trailing=petBucket&&Object.entries(petBucket).filter(([,pet])=>isObject(pet) &&
+        String(pet.settlementReceiptId??'').trim()===id &&
+        String(pet.playerExitTransactionId??'').trim()===transactionId &&
+        intOr(pet.revisionBefore,null)===after &&
+        intOr(pet.revisionAfter,null)===currentRevision
+      );
+      if(trailing.length!==1)continue;
+    }
     matches.push({transactionId,record:clone(record)});
   }
   if(matches.length===1)return {ok:true,transactionId:matches[0].transactionId,record:matches[0].record};
