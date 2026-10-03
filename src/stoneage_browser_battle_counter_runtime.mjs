@@ -146,7 +146,11 @@ function counterCheck(context,{
   const luck=typeOf(attacker)==='player'?num(attackerLuck,0):0;
   let par=calc.per*tableValue*0.1+luck+num(attackerCounterBonus,0);
   const packedCom3=int(attacker?.battleCommands?.[2]);
-  const packedCounter=packedCom3==null?0:Math.floor((packedCom3&0xffff)/256)&0xff;
+  let packedCounter=0;
+  if(packedCom3!=null){
+    packedCounter=(packedCom3&0xffff)>>8;
+    if(packedCounter>127)packedCounter-=256;
+  }
   const resolvedNoGuardAdjust=num(noguardCounterAdjust,num(attacker?.noguardCounterBonus,packedCounter));
   if(isNoGuardCommand)par+=resolvedNoGuardAdjust;
   if(par>100)par=100;
@@ -161,7 +165,8 @@ function counterCheck(context,{
     };
   }
 
-  const triggered=finalRoll<=par*100;
+  const playerCounter=typeOf(attacker)==='player';
+  const triggered=playerCounter?finalRoll<par*100:finalRoll<=par*100;
   const reactSuppressed=attackerDamageReact===true||defenderDamageReact===true;
 
   return {
@@ -182,6 +187,7 @@ function counterCheck(context,{
     probabilityPercent:par,
     probabilityBasis:par/100,
     roll:finalRoll,
+    comparison:playerCounter?'lt':'lte',
     triggered,
     reactSuppressed,
     sourceReturnFlag:reactSuppressed?false:true,
