@@ -101,6 +101,7 @@ const roundRuntime=createBrowserBattleRoundRuntime({
   damagePlanRuntime,
   criticalDamageRuntime,
   damageReactRuntime,
+  damageReactCommitRuntime,
   damageDeathChainRuntime,
   counterChainRuntime,
   statusRuntime,
