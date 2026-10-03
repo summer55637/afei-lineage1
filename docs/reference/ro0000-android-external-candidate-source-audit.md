@@ -61,3 +61,15 @@ RO0000 target production source
 The public listing at https://www.mir6.com/mobile/80406.html displays a publication date of 2026-08-15 and a package size of 2.24 GB. It labels access as 30 Mi coins or free for VIP members and carries a learning-only disclaimer; its notice says commercial use requires legitimate authorization.
 
 This check did not obtain the archive bytes or a verifiable manifest/hash for the contained client resources. The listing therefore remains a gated candidate only. Its advertised package size, name, and installation instructions do not establish that its APK, `libStoneage.so`, `.sabex`, ADRN/Real/SPR, palette, or patch payloads match the RO0000 target. No content from it is admitted to reconstruction data.
+
+
+## 2026-10-03 public repository resource recheck
+
+The following public client/source repositories were checked for real client resource payloads:
+
+- `BismarckDD/Stoneage` — source tree contains client code but no `.sabex`, ADRN/Real/SPR, or SAP client payloads.
+- `pioneers-g/StoneAgeClient` — source documentation lists the original client data as required external inputs; the checked tree contains no corresponding payloads.
+- `alrightlook/StoneAgeMobileApp` — source tree contains code and demo assets, but no target `.sabex`, ADRN/Real/SPR, or SAP payloads.
+- `flowerjunho/stoneage-light` — contains rendered pet/ride and other web image assets, but no matching client binary resource set. These are variant/visual-reference candidates only; no target-version identity or reuse provenance is established.
+
+This is a bounded check of the named repositories, not a claim that no such files exist anywhere on the public internet. None of these sources closes the RO0000 production-byte gap. Do not substitute code, rendered web images, or unrelated-version client binaries for target resource payloads.
