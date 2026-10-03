@@ -73,7 +73,7 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],ridePetBidByPa
     if(bid==null||bid<0||bid>=10||seen.has(bid))continue;
     seen.add(bid);bids.push(bid);
   }
-  const next=clone(context),credits=[];
+  const next=clone(context),credits=[],petAiEvents=[];
   for(const bid of bids){
     const actor=findEntry(next,bid);
     if(!actor)continue;
@@ -99,7 +99,7 @@ function creditEnemyExp(context,{enemyBid=null,participantBids=[],ridePetBidByPa
       ridePetCredit={ridePetBid,exp:rideExp,workGetExpBefore:rideBefore,workGetExpAfter:ridePet.workGetExp,killPetCountBefore:rideKillsBefore,killPetCountAfter:ridePet.killPetCount,levelDelta:rideCalc.levelDelta,multiplier:0.6};
     }
     let petAiCredit=null;
-    if(String(actor.sourceType??'').trim().toLowerCase()==='pet' && int(next.context.norisk)===0){
+    if(String(actor.sourceType??'').trim().toLowerCase()==='pet' && (int(next.context.norisk)??0)===0){
       const gain=enemy.level>actor.level?AI_FIX_PETGOLDWIN:AI_FIX_PETWIN;
       const beforeAi=int(actor.variableAi)??0;
       const afterAi=Math.max(CHAR_MINVARIABLEAI,Math.min(CHAR_MAXVARIABLEAI,beforeAi+gain));
