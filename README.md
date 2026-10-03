@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：37279ef — ci: add V4.50 target list regression
-- 更新時間：2026-10-03T18:16:02+08:00
+- 最新 commit：81eecbe — test: align V4.50 bow target pair ordering
+- 更新時間：2026-10-03T18:16:34+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.50
 - Playable HTML：⏸️ 尚未建立（刻意保留）
