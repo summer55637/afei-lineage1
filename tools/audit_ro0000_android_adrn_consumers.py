@@ -53,7 +53,7 @@ def scan_excerpt(abi, function, lines):
         mn = MEM_OP.search(line)
         op_class = classify_mnemonic(mn.group("mn")) if mn else "unknown"
         for offset in sorted(set(candidates), key=lambda x:int(x,16)):
-            strength = "direct-base-offset" if base else "offset-only"
+            strength = "function-base-offset" if base else "offset-only"
             hits.append({
                 "abi": abi,
                 "function": function,
@@ -82,7 +82,7 @@ def main():
             if dis.get("status") != "ok":
                 continue
             all_hits.extend(scan_excerpt(abi, symbol.get("name"), dis.get("excerpt", [])))
-    direct = [x for x in all_hits if x["strength"] == "direct-base-offset"]
+    direct = [x for x in all_hits if x["strength"] == "function-base-offset"]
     offsets_found = sorted({x["offset"] for x in all_hits}, key=lambda x:int(x,16))
     direct_offsets = sorted({x["offset"] for x in direct}, key=lambda x:int(x,16))
     result = {
@@ -94,22 +94,22 @@ def main():
         "scan": {
             "abis": sorted({x.get("abi") for x in all_hits}),
             "focusedFunctionHits": len(all_hits),
-            "directBaseOffsetHits": len(direct),
+            "functionBaseOffsetHits": len(direct),
             "offsetsFound": offsets_found,
-            "directBaseOffsetOffsets": direct_offsets,
+            "functionBaseOffsetOffsets": direct_offsets,
         },
-        "directCandidates": direct,
+        "functionBaseOffsetCandidates": direct,
         "offsetOnlyLeads": [x for x in all_hits if x["strength"] == "offset-only"],
         "closure": {
-            "status": "consumer-candidates-found" if direct else "no-direct-consumer-found",
-            "semanticRule": "Only direct-base-offset candidates are promoted for manual semantic review; offset-only hits are leads only.",
+            "status": "consumer-candidates-found" if direct else "no-function-base-offset-consumer-found",
+            "semanticRule": "Only function-base-offset candidates are promoted for manual semantic review; offset-only hits are leads only. The base cue may occur anywhere in the same function, so these remain triage candidates rather than final semantic proof.",
         },
     }
     Path(args.output).write_text(json.dumps(result, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
     print(json.dumps({
         "status": result["closure"]["status"],
-        "directBaseOffsetHits": len(direct),
-        "directBaseOffsetOffsets": direct_offsets,
+        "functionBaseOffsetHits": len(direct),
+        "functionBaseOffsetOffsets": direct_offsets,
         "offsetOnlyHits": len(result["offsetOnlyLeads"]),
     }, ensure_ascii=False, indent=2))
 
