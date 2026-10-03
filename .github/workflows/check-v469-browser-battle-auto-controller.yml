@@ -1,0 +1,25 @@
+name: Check V4.69 browser battle auto controller
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_battle_auto_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
+      - 'tools/check_v469_browser_battle_auto_controller.mjs'
+      - '.github/workflows/check-v469-browser-battle-auto-controller.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.69 controller regression
+        run: node tools/check_v469_browser_battle_auto_controller.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_auto_runtime.mjs
+          node --check src/stoneage_browser_state_controller.mjs
+          node --check tools/check_v469_browser_battle_auto_controller.mjs
