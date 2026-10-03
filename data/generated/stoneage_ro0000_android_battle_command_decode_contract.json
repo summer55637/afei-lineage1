@@ -1,0 +1,265 @@
+{
+  "format": "ro0000-android-battle-command-decode-contract-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86": {
+      "library": "lib/x86/libStoneage.so",
+      "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+      "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+    },
+    "armeabiV7a": {
+      "library": "lib/armeabi-v7a/libStoneage.so",
+      "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+      "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+    }
+  },
+  "functions": {
+    "BattleProc": {
+      "function": "BattleProc()",
+      "address": {
+        "x86": "0x10c790",
+        "armeabiV7a": "0x0f69c1"
+      },
+      "sizeBytes": {
+        "x86": 9590,
+        "armeabiV7a": 6364
+      }
+    },
+    "master": {
+      "function": "master(action*)",
+      "address": {
+        "x86": "0x359eb0",
+        "armeabiV7a": "0x234eb1"
+      },
+      "sizeBytes": {
+        "x86": 17284,
+        "armeabiV7a": 9348
+      }
+    },
+    "getNum": {
+      "function": "get_num()",
+      "address": {
+        "x86": "0x3408e0",
+        "armeabiV7a": "0x22753d"
+      },
+      "sizeBytes": {
+        "x86": 408,
+        "armeabiV7a": 252
+      }
+    },
+    "getCommandAsc": {
+      "function": "get_command_asc()",
+      "address": {
+        "x86": "0x347740",
+        "armeabiV7a": "0x22b1a1"
+      },
+      "sizeBytes": {
+        "x86": 500,
+        "armeabiV7a": 332
+      }
+    }
+  },
+  "localHelpers": {
+    "getCommand": {
+      "function": "get_command()",
+      "x86Address": "0x35e240",
+      "x86MasterRelativeOffset": "0x4390",
+      "symbolBoundary": "local code inside master(action*); not an independently exported symbol",
+      "behavior": "scan BattleCmd for B<opcode>| at a command boundary; B must be preceded by '|' or be at the command start; return the opcode byte; return -1 on NUL before a match"
+    }
+  },
+  "queues": {
+    "BattleCmd": {
+      "producer": "lssproto_B_recv() default branch",
+      "storage": {
+        "slotCount": 4,
+        "slotSizeBytes": 4096,
+        "readerIndexAdvance": "(readPointer + 1) & 3"
+      },
+      "consumer": "BattleProc()",
+      "transfer": "copy selected BattleCmdBak slot into BattleCmd, then advance read pointer",
+      "separation": "separate from the BattleStatus receive ring used by lssproto_B_recv() C branch"
+    }
+  },
+  "tokens": {
+    "numeric": {
+      "function": "get_num()",
+      "encoding": "uppercase hexadecimal nibbles, accumulated by shift-left 4 and add",
+      "delimiter": "after a number begins, first non-hex byte ends the token; the cursor remains at the delimiter for caller-specific handling",
+      "emptyAtNul": "returns -1 when no digit is present and input is at NUL",
+      "safetyBoundary": "native parser has no explicit token-length bound in the observed routine; a reconstruction parser must impose safe input and range checks"
+    },
+    "text": {
+      "function": "get_command_asc()",
+      "buffers": {
+        "count": 4,
+        "bytesPerBuffer": 128
+      },
+      "separators": {
+        "field": "TAB (0x09)",
+        "end": [
+          "|",
+          "NUL"
+        ]
+      },
+      "byteCopyRules": [
+        {
+          "test": "(byte & 0xe0) == 0xe0",
+          "bytes": 3
+        },
+        {
+          "test": "(byte & 0xc0) == 0xc0",
+          "bytes": 2
+        },
+        {
+          "test": "otherwise",
+          "bytes": 1
+        }
+      ],
+      "boundary": "legacy multibyte byte-copy logic; not a general UTF-8 decoder; no per-buffer bound check observed"
+    }
+  },
+  "commandDispatch": {
+    "note": "Opcode byte is returned by local get_command() from a B<opcode>| token. Meanings are recorded only to the extent directly visible in target behavior or explicitly marked as cross-source.",
+    "observed": [
+      {
+        "opcode": "K",
+        "byte": "0x4b",
+        "targetBehavior": "build/display battle text window; parse up to four TAB-separated strings through get_command_asc(); play sound 202"
+      },
+      {
+        "opcode": "j",
+        "byte": "0x6a",
+        "targetBehavior": "conditional battle-effect branch is present in target; effect-specific detail depends on the compiled feature path"
+      },
+      {
+        "opcode": "b",
+        "byte": "0x62",
+        "targetBehavior": "battle-model path initializes participant/action visual state and creates/updates attack actions"
+      },
+      {
+        "opcode": "V",
+        "byte": "0x56",
+        "targetBehavior": "for the target-index-outside-party path, parse and write the battle variable to master action attribute state"
+      },
+      {
+        "opcode": "M",
+        "byte": "0x4d",
+        "targetBehavior": "malfunction/status-result path updates participant state and can create/remove status actions"
+      },
+      {
+        "opcode": "D",
+        "byte": "0x44",
+        "targetBehavior": "damage/result application branch; ATT_DAMAGE name is cross-source semantic corroboration"
+      }
+    ]
+  },
+  "damageResult": {
+    "opcode": "D",
+    "targetBehavior": {
+      "selectedParticipant": "target index resolves through p_party[] to a participant ACTION",
+      "values": "the client consumes server-supplied result category, subtype and numeric amounts; the examined consumer does not calculate authoritative damage",
+      "optionalTokens": [
+        "p: pet damage follows the player damage value",
+        "m: optional MP adjustment token in the relevant recovery branch"
+      ],
+      "repeat": "after applying one result, the target probes the next command; if it is another D and its result category/subtype match the current group, it loops to process the next participant; otherwise it restores the command cursor and leaves the next command for the outer state machine"
+    },
+    "category0": {
+      "subtype0": {
+        "observed": "damage",
+        "popupId": 6,
+        "changes": [
+          "subtract numeric value from participant HP",
+          "subtract optional pet damage from pet HP",
+          "clamp depleted HP/pet HP to zero",
+          "trigger hit mark, damage animation and relevant pet-fall transitions"
+        ]
+      },
+      "subtype1": {
+        "observed": "HP recovery",
+        "popupId": 14,
+        "changes": [
+          "add numeric value to participant HP, capped at max HP",
+          "add optional pet damage/recovery value to pet HP, capped at max pet HP"
+        ],
+        "soundId": 102
+      },
+      "subtype2": {
+        "observed": "combined recovery path",
+        "popupId": 36,
+        "changes": [
+          "add numeric value to HP, capped at max HP",
+          "apply optional MP amount",
+          "add optional pet value, capped at max pet HP"
+        ],
+        "soundId": 102
+      },
+      "subtype3to6": {
+        "observed": "special result display paths",
+        "popupIds": [
+          37,
+          38,
+          39,
+          40
+        ],
+        "changes": [
+          "reset animation state and enter participant result animation state"
+        ],
+        "hpMpDelta": "no HP/MP write observed in these branches"
+      },
+      "additional": {
+        "observed": "target has further conditional popup/result branches; exact meanings are not promoted to target-confirmed feature labels"
+      }
+    },
+    "category1": {
+      "subtype0": {
+        "observed": "MP decrease",
+        "popupId": 16,
+        "changes": [
+          "subtract numeric value from participant MP",
+          "clamp MP to zero"
+        ]
+      },
+      "subtype1": {
+        "observed": "MP increase",
+        "popupId": 15,
+        "changes": [
+          "add numeric value to participant MP",
+          "cap at pc.maxMp under _FIXSHOWMPERR; otherwise cap at 100"
+        ],
+        "soundId": 102
+      }
+    },
+    "category3": {
+      "observed": "conditional special branch exists in public semantic source under _PETSKILL_LER; target feature identity is not asserted from the source alone"
+    }
+  },
+  "crossSourceReference": {
+    "repository": "alrightlook/StoneAgeMobileApp",
+    "commit": "8c870c87ce1305c52fb6713bf824619467847bba",
+    "path": "android-project/jni/src/oft/oft.cpp",
+    "role": "semantic reference only; exact source/build identity with the audited APK is not established"
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "preserve separate BattleCmd and BattleStatus receive paths",
+      "parse B<opcode>| records with bounded token readers",
+      "treat D values as authoritative client-side result inputs rather than recomputing damage from the command consumer",
+      "apply only the target-confirmed HP/MP/pet state changes and animation/effect transitions"
+    ],
+    "boundary": [
+      "server-side hit/damage formula, random rolls, mitigation and authoritative result calculation are not proven by this client consumer",
+      "malformed command behavior must be made safe in the reconstruction rather than copied from unbounded native parsing",
+      "some optional result branches remain build-feature-dependent and must not be blindly enabled"
+    ]
+  },
+  "verificationBoundary": {
+    "targetBinaryIdentityPinned": true,
+    "abiFunctionAddressesRecorded": true,
+    "commandQueueAndParserStaticallyReviewed": true,
+    "deviceRuntimeBattlePlaybackObserved": false,
+    "serverBattleFormulaVerifiedFromApk": false
+  }
+}
