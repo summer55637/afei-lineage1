@@ -25,6 +25,8 @@ on:
       - 'tools/check_client_spr_asset_pack.mjs'
       - 'data/generated/stoneage_ro0000_android_client_loop_contract.json'
       - 'data/generated/stoneage_ro0000_android_map_movement_contract.json'
+      - 'data/generated/stoneage_ro0000_android_battle_command_decode_contract.json'
+      - 'tools/check_ro0000_android_battle_command_contract.py'
       - 'tools/check_ro0000_android_update_request_audit.py'
       - 'data/generated/stoneage_ro0000_android_update_request_audit.json'
       - '.github/workflows/audit-ro0000-android-client.yml'
@@ -50,6 +52,8 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native.py'
       - name: Test Android native contract validator
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_native_contracts.py'
+      - name: Test Android battle command decoder contract
+        run: python3 -m unittest discover -s tools -p 'check_ro0000_android_battle_command_contract.py'
       - name: Test Android Lua container contract
         run: python3 -m unittest discover -s tools -p 'check_ro0000_android_lua_container_contract.py'
       - name: Test Android SPR/SPRADRN parser and target fixups
@@ -110,7 +114,7 @@ jobs:
               "play_map_bgm", "drawMap", "drawMap2", "drawMapUi", "redrawMap", "initMap",
               "createMap", "setMap", "writeMap", "readMap", "readHitMap", "checkHitMap",
               "checkEmptyMap", "checkEmptyMapData", "_checkEmptyMap", "setEventMemory",
-              "lssproto_S_recv", "lssproto_M_recv", "lssproto_EN_recv", "0x927c0", "0x186a0",
+              "lssproto_S_recv", "lssproto_M_recv", "lssproto_EN_recv", "BattleProc", "master", "get_num", "get_command_asc", "0x927c0", "0x186a0",
               "DrawBattleMap", "ddrawBattleMap", "PutTileBmp", "DrawAutoMapping", "MakeHitBox",
               "MakeAnimDisp", "getRouteMap", "updateMapArea", "setMapMovePoint", "setMapMovePoint2",
               "_setMapMovePoint", "_mapMove", "mapMove2", "_partyMapMove", "mapCheckSum",
