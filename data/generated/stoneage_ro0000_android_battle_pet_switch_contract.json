@@ -1,0 +1,130 @@
+{
+  "format": "ro0000-android-battle-pet-switch-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "libraries": {
+      "x86": {
+        "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+        "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+      },
+      "armeabiV7a": {
+        "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+        "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+      }
+    }
+  },
+  "functions": {
+    "BattleButtonPet": {
+      "function": "BattleButtonPet",
+      "address": {
+        "x86": "0xFD790",
+        "armeabiV7a": "0xEE369"
+      },
+      "sizeBytes": {
+        "x86": 5285,
+        "armeabiV7a": 2680
+      }
+    },
+    "BattleMenuProc": {
+      "function": "BattleMenuProc",
+      "address": {
+        "x86": "0x106040",
+        "armeabiV7a": "0xF312D"
+      },
+      "sizeBytes": {
+        "x86": 7317,
+        "armeabiV7a": 4884
+      }
+    }
+  },
+  "menu": {
+    "buttonIndex": 6,
+    "windowActionObjectOffset": "0xa4398",
+    "menuReturnFlagObjectOffset": "0xa4394",
+    "candidateSlots": {
+      "first": 0,
+      "last": 4,
+      "count": 5,
+      "petRecordStrideBytes": "0x1a00"
+    },
+    "rowConstruction": {
+      "gates": [
+        "pet record field at +0x114 is nonzero",
+        "per-slot selector short at pc+0xee+2*index equals 1"
+      ],
+      "hpPresentation": "pet hp at record +0x08 <= 0 is rendered with the red palette; current battle pet index at pc+0xec overrides row color to yellow",
+      "note": "The row's visual presence is not the final selection authorization; the click callback repeats its own checks."
+    }
+  },
+  "callbacks": {
+    "candidateSelect": {
+      "x86CodeEntry": "0x109ca0",
+      "dispatch": "std::function callback body; local code address, not an exported named function",
+      "clickTimeChecks": [
+        "pet record field at +0x114 equals exactly 1",
+        "per-slot selector short at pc+0xee+2*index equals 1",
+        "pet hp at record +0x08 is greater than 0",
+        "selected index differs from current battle pet index at pc+0xec"
+      ],
+      "request": {
+        "format": "S|%d",
+        "index": "zero-based pet slot, unchanged",
+        "sender": "lssproto_B_send(sockfd, buffer) when bNewServer is true; otherwise old_lssproto_B_send(sockfd, buffer)"
+      },
+      "successEffects": [
+        "play_se(203,320,240)",
+        "DeathAction(menu window ACTION)",
+        "clear menu window pointer at this+0xa4398",
+        "set menu return flag at this+0xa4394",
+        "reset battle button backup fields"
+      ],
+      "rejectedSelection": "No S command is sent; play_se(220,320,240) is called."
+    },
+    "withdraw": {
+      "x86CodeEntry": "0x10a330",
+      "dispatch": "std::function callback body; local code address, not an exported named function",
+      "guard": "current battle pet index at pc+0xec must not equal -1",
+      "request": {
+        "format": "S|-1",
+        "sender": "lssproto_B_send(sockfd, literal) when bNewServer is true; otherwise old_lssproto_B_send(sockfd, literal)"
+      },
+      "successEffects": [
+        "play_se(203,320,240)",
+        "DeathAction(menu window ACTION)",
+        "clear menu window pointer at this+0xa4398",
+        "set menu return flag at this+0xa4394",
+        "reset battle button backup fields"
+      ],
+      "notApplicable": "When current battle pet index is -1, the callback returns without sending."
+    }
+  },
+  "menuHandoff": {
+    "consumer": "BattleMenuProc",
+    "observed": "Polls bit 0 of the menu return flag at this+0xa4394. When set, runs the menu-close/transition branch and then calls ClearBattleButton().",
+    "localPetIndexMutation": "Neither candidate-select nor withdraw callback writes pc+0xec; the callback sends the request and closes its own menu. The accepted/current pet identity must be treated as downstream state, not as a click-time local assignment."
+  },
+  "protocolCrossCheck": {
+    "provenance": "Fixed-C/browser command contract cross-reference; not APK-native evidence",
+    "source": "docs/reference/v397-browser-player-battle-command-preflight.md",
+    "semantics": {
+      "S|-1": "Fixed-C/browser command naming: pet_in; Android UI presents this as the pet-return action.",
+      "S|0..4": "Fixed-C/browser command naming: pet_out with petIndex in 0..4; Android UI uses the positive index to request a selected pet.",
+      "range": "CHAR_MAXPETHAVE=5; do not confuse petIndex with battle targetBid 0..19."
+    },
+    "boundary": "The Fixed-C/browser naming is a cross-source protocol interpretation; it does not prove the remote server's exact response timing or the Android UI's runtime appearance."
+  },
+  "reconstructionUse": {
+    "directlyUsable": [
+      "battle pet menu candidate eligibility",
+      "positive-index pet selection request and -1 return request",
+      "menu close handoff after request"
+    ],
+    "notProven": [
+      "real-device or emulator battle playback after pet switch",
+      "packet-capture confirmation of server acceptance/rejection and response timing",
+      "the exact downstream write site for the accepted current battle pet index in the live runtime",
+      "server-side pet-switch policy beyond the separately identified Fixed-C cross-reference"
+    ]
+  }
+}

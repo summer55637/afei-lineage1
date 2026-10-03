@@ -882,3 +882,19 @@ callback 依 work `+0x130` 選擇格式分支，透過 `sprintf` 組合固定 0x
 若來源 ACTION 的 `+0xd10==2`，callback 會額外呼叫 `StockDispBuffer()`，位置為飄字 ACTION 的 x+2、y−22。該額外 callback 的實際畫面意義尚未由 target 靜態證據單獨確定。這些繪製呼叫確認的是客戶端呈現管線，不代表伺服器傷害計算。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_command_decode_contract.json`。契約會在 CI 中對照 APK／ELF identity 及 x86、ARMv7a 函式位址；完整字形映射、每個特殊格式分支的視覺等價與裝置端播放仍未完成驗證。
+
+
+## Battle pet-switch menu and command callback: BattleButtonPet()
+
+目標 APK 的寵物更換選單、點擊回呼與選單返回交接已由 x86 native 指令追到，並以 ARMv7a 的外層函式符號交叉核對。此處保留 native 欄位偏移，不替尚未確認的原始結構成員命名。
+
+- `BattleButtonPet()`：x86 `0xFD790`（5,285 bytes）、ARMv7a `0xEE369`（2,680 bytes）。按鈕索引為 6；開啟時建立獨立選單視窗，初始化寵物列的 display/font handle，並透過 `StockFontBuffer()`／`StockDispBuffer()` 提交可點擊項目。
+- 選單逐一檢查 0..4 共五個寵物槽。列建立時，寵物 record `+0x114` 非零且玩家側每槽 short（`pc+0xee+2*i`）等於 1 才進入顯示路徑；HP `+0x08` 小於等於 0 會改用紅色，當前出戰寵物索引（`pc+0xec`）則覆寫為黃色。這些是 UI 呈現條件，不能替代點擊時的資格檢查。
+- 寵物列的 x86 callback code entry 為 `0x109ca0`。點擊時重新確認 record `+0x114==1`、`pc+0xee+2*i==1`、HP > 0，且索引不同於目前出戰寵物。通過才組成 `S|%d`，傳送原始零起算槽位；`bNewServer` 決定呼叫 `lssproto_B_send()` 或 `old_lssproto_B_send()`。成功會播放 sound 203、呼叫 `DeathAction()` 關閉選單、清除視窗指標並設定選單返回旗標；資格不符則不送封包，只播放 sound 220。
+- 收回寵物 callback 的 x86 code entry 為 `0x10a330`。只有目前出戰寵物索引不等於 -1 才送出 `S|-1`；之後同樣播放 sound 203、關閉視窗並設定返回旗標。若目前沒有出戰寵物，callback 不送出命令。
+- `BattleMenuProc()`：x86 `0x106040`（7,317 bytes）、ARMv7a `0xF312D`（4,884 bytes）。它輪詢 `this+0xa4394` 的 bit 0；旗標設起後進入關閉／轉場路徑，最後呼叫 `ClearBattleButton()`。兩個寵物 callback 都沒有直接寫入 `pc+0xec`，因此點擊代表送出更換請求，而非已在客戶端確認切換完成。
+- Fixed-C／Browser V3.97 對 `S|...` 的索引範圍與 PETIN/PETOUT 命名屬跨來源協議對照，不當成 APK 直接證據。寵物索引 0..4 與戰鬥 targetBid 0..19 是兩套不同欄位。
+
+目前可將選單資格、兩種請求字串與 UI 關閉交接用於重建；真機／模擬器播放、封包擷取後的伺服器接受結果，以及伺服器實際回覆後 current pet 的最終更新點，仍保留為執行期驗證邊界。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_pet_switch_contract.json`。CI 會核對其 APK／ELF identity 與 `BattleButtonPet()`、`BattleMenuProc()` 的 x86／ARMv7a 函式錨點。

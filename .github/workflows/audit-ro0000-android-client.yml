@@ -28,6 +28,7 @@ on:
       - 'data/generated/stoneage_ro0000_android_client_loop_contract.json'
       - 'data/generated/stoneage_ro0000_android_map_movement_contract.json'
       - 'data/generated/stoneage_ro0000_android_battle_command_decode_contract.json'
+      - 'data/generated/stoneage_ro0000_android_battle_pet_switch_contract.json'
       - 'data/generated/stoneage_ro0000_android_battle_waza_hitbox_contract.json'
       - 'tools/check_ro0000_android_battle_waza_hitbox_contract.py'
       - 'tools/check_ro0000_android_battle_command_contract.py'
@@ -95,7 +96,8 @@ jobs:
             --movement-contract data/generated/stoneage_ro0000_android_map_movement_contract.json \
             --resource-layout data/generated/stoneage_ro0000_android_native_resource_layout.json \
             --battle-command-contract data/generated/stoneage_ro0000_android_battle_command_decode_contract.json \
-            --waza-hitbox-contract data/generated/stoneage_ro0000_android_battle_waza_hitbox_contract.json
+            --waza-hitbox-contract data/generated/stoneage_ro0000_android_battle_waza_hitbox_contract.json \
+            --battle-pet-switch-contract data/generated/stoneage_ro0000_android_battle_pet_switch_contract.json
       - name: Publish focused APK evidence with retry
         shell: bash
         env:
@@ -289,6 +291,7 @@ jobs:
             data/generated/stoneage_ro0000_android_battle_render_chain.json
             data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
             data/generated/stoneage_ro0000_android_battle_waza_hitbox_contract.json
+            data/generated/stoneage_ro0000_android_battle_pet_switch_contract.json
             data/generated/stoneage_ro0000_android_map_prefetch_contract.json
             data/generated/stoneage_ro0000_android_native_resource_focus.json
             data/generated/stoneage_ro0000_android_adrn_consumer_triage.json

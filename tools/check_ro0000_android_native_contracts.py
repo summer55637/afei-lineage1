@@ -423,6 +423,7 @@ def main():
     parser.add_argument("--resource-layout", required=True)
     parser.add_argument("--battle-command-contract")
     parser.add_argument("--waza-hitbox-contract")
+    parser.add_argument("--battle-pet-switch-contract")
     args = parser.parse_args()
     native = json.loads(Path(args.native_audit).read_text(encoding="utf-8"))
     contracts = [
@@ -433,12 +434,14 @@ def main():
         contracts.append(("battle command decode contract", json.loads(Path(args.battle_command_contract).read_text(encoding="utf-8"))))
     if args.waza_hitbox_contract:
         contracts.append(("battle waza hitbox contract", json.loads(Path(args.waza_hitbox_contract).read_text(encoding="utf-8"))))
+    if args.battle_pet_switch_contract:
+        contracts.append(("battle pet switch contract", json.loads(Path(args.battle_pet_switch_contract).read_text(encoding="utf-8"))))
     errors = validate_contracts(native, contracts)
     resource_layout = json.loads(Path(args.resource_layout).read_text(encoding="utf-8"))
     errors.extend(validate_resource_function_anchors(native, resource_layout))
     if errors:
         raise SystemExit("\n".join(errors))
-    print("Android native loop, movement, auto-map color and rendering anchors match audited x86 and ARMv7 symbols.")
+    print("Android native loop, movement, auto-map, rendering and battle pet-switch anchors match audited x86 and ARMv7 symbols.")
 
 
 if __name__ == "__main__":
