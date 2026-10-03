@@ -50,6 +50,7 @@ import { createBrowserBattleDeathRuntime, ACTION_BATTLE_DEATH_PLAN, BROWSER_BATT
 import { createBrowserBattleDeathCommitRuntime, ACTION_BATTLE_DEATH_COMMIT, BROWSER_BATTLE_DEATH_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_death_commit_runtime.mjs';
 import { createBrowserBattleEndRuntime, ACTION_BATTLE_END_PLAN, BROWSER_BATTLE_END_RUNTIME_FORMAT } from './stoneage_browser_battle_end_runtime.mjs';
 import { createBrowserBattleFinishCommitRuntime, ACTION_BATTLE_FINISH_COMMIT, BROWSER_BATTLE_FINISH_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_finish_commit_runtime.mjs';
+import { createBrowserBattleRoundRuntime, ACTION_BATTLE_ROUND_RESOLVE, BROWSER_BATTLE_ROUND_RUNTIME_FORMAT } from './stoneage_browser_battle_round_runtime.mjs';
 import { createBrowserBattleProfitRouteRuntime, ACTION_BATTLE_PROFIT_ROUTE_PLAN, BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_battle_profit_route_runtime.mjs';
 import { createBrowserBattleDuelPointRuntime, ACTION_BATTLE_DUELPOINT_PLAN, BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_runtime.mjs';
 import { createBrowserBattleDuelPointCommitRuntime, ACTION_BATTLE_DUELPOINT_COMMIT, BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_commit_runtime.mjs';
@@ -217,6 +218,16 @@ function createBrowserStateController({
   const battleDeathCommitRuntime=createBrowserBattleDeathCommitRuntime();
   const battleEndRuntime=createBrowserBattleEndRuntime();
   const battleFinishCommitRuntime=createBrowserBattleFinishCommitRuntime();
+  const battleRoundRuntime=createBrowserBattleRoundRuntime({
+    attackPreflightRuntime:battleAttackPreflightRuntime,
+    attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
+    damagePlanRuntime:battleDamagePlanRuntime,
+    criticalDamageRuntime:battleCriticalDamageRuntime,
+    damageReactRuntime:battleDamageReactRuntime,
+    damageDeathChainRuntime:battleDamageDeathChainRuntime,
+    statusRuntime:battleStatusRuntime,
+    endRuntime:battleEndRuntime
+  });
   const battleProfitRouteRuntime=createBrowserBattleProfitRouteRuntime();
   const battleDuelPointRuntime=createBrowserBattleDuelPointRuntime();
   const battleDuelPointCommitRuntime=createBrowserBattleDuelPointCommitRuntime();
@@ -731,6 +742,31 @@ function createBrowserStateController({
           ...result,
           format:BROWSER_BATTLE_END_RUNTIME_FORMAT,
           battleContext:clone(battleContext),
+          state:clone(currentState)
+        };
+      }
+      if(type===ACTION_BATTLE_ROUND_RESOLVE){
+        if(!battleContext)return {ok:false,handled:false,stage:'battle-round',reason:'battle-context-required',state:clone(currentState)};
+        if(battleRoundRuntime.ok!==true)return {ok:false,handled:false,stage:'battle-round',reason:'browser-battle-round-runtime-invalid',state:clone(currentState)};
+        const result=await battleRoundRuntime.resolve(
+          {format:BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT,context:clone(battleContext)},
+          {
+            attackRolls:Array.isArray(action.attackRolls)?action.attackRolls:[],
+            statusRandomRollsByBid:action.statusRandomRollsByBid??{},
+            counterPolicy:String(action.counterPolicy??'defer'),
+            roundId:action.roundId??null,
+            defaultTargetRollByBid:action.defaultTargetRollByBid??{},
+            sourceTargetRollByBid:action.sourceTargetRollByBid??{},
+            now:action.now??null
+          }
+        );
+        if(result.ok===true&&result.handled===true&&result.context){
+          battleContext=clone(result.context);
+        }
+        return {
+          ...result,
+          format:BROWSER_BATTLE_ROUND_RUNTIME_FORMAT,
+          battleContext:battleContext?clone(battleContext):null,
           state:clone(currentState)
         };
       }
