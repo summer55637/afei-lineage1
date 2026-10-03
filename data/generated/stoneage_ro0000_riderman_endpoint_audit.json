@@ -1,0 +1,58 @@
+{
+  "format": "stoneage-ro0000-riderman-endpoint-audit-v1",
+  "updated": "2026-10-03",
+  "source": {
+    "dataPath": "ro0000/server/merged-source/gmsv/data/npc/family/riderman.conf",
+    "hydataPath": "ro0000/server/merged-source/gmsv/hydata/data/npc/family/riderman.conf",
+    "dataHydataIdentical": true
+  },
+  "progression": [
+    {
+      "course": "初級",
+      "petLevelCap": 40,
+      "tuition": 5000,
+      "newLearnRide": 40,
+      "requiresPrevious": null
+    },
+    {
+      "course": "中級",
+      "petLevelCap": 80,
+      "tuition": 10000,
+      "newLearnRide": 80,
+      "requiresPrevious": 40
+    },
+    {
+      "course": "高級",
+      "petLevelCap": 120,
+      "tuition": 15000,
+      "newLearnRide": 120,
+      "requiresPrevious": 80
+    },
+    {
+      "course": "特級",
+      "petLevelCap": "all",
+      "tuition": 20000,
+      "newLearnRide": 200,
+      "requiresPrevious": 120
+    }
+  ],
+  "endpointTextRules": {
+    "petCondition": "trainer text says pet loyalty 100 is required",
+    "suitablePet": "depends on character body/color according to source text",
+    "dataConfigSource": "conf file only; actual eligibility is enforced by Fixed-C family.c"
+  },
+  "fixedRuntime": {
+    "source": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "module": "gmsv/src/npc/npc_riderman.c",
+    "stateFields": [
+      "CHAR_LEARNRIDE",
+      "CHAR_RIDEPET",
+      "CHAR_LOWRIDEPETS"
+    ],
+    "learnedLevelGate": "family.c rejects riding when CHAR_LEARNRIDE < pet LV",
+    "petRuntimeGate": "family.c additionally checks pet WORKFIXAI >= 100 and player LV + 5 >= pet LV",
+    "newRideCode": "ITEM_useLearnRideCode ORs RIDE_PET0..RIDE_PET11 into CHAR_LOWRIDEPETS; item argument may require a minimum transmigration number"
+  },
+  "status": "source-closed-for-progression-and-runtime-eligibility",
+  "policy": "Preserve exact endpoint tuition/level values. The family/faction income side effects in npc_riderman.c are multiplayer/server-economy behavior and are not required for single-player reproduction."
+}
