@@ -9,7 +9,7 @@ V4.61 重建 Fixed-C `BATTLE_AddProfit -> BATTLE_AddExpItem` 的死亡副作用�
 普通 PVE 且 `norisk == 0`：
 
 - Player normal death：Charm `-2`，Lv<=10 時除以 2；default Pet VariableAI `-100`，同樣依 level flag 除以 2；command 設為 NONE。
-- Player ultimate death：Charm `-4`，default Pet VariableAI `-1000`，同樣受 level flag；Default Pet 先離開 Battle Entry。
+- Player ultimate death：Charm `-4`，default Pet VariableAI `-1000`，同樣受 level flag；Default Pet 先離開 Battle Entry，但不清除玩家的 DefaultPet/activePetId 關係。
 - Pet normal death：自身 VariableAI `-500`，owner `DEADPETCOUNT += 1`；owner Lv<=10 時上述 VariableAI delta 除以 2。
 - Pet ultimate death：自身 VariableAI `-1000`，owner `DEADPETCOUNT += 1`，並離開 Battle Entry；同樣使用 owner level flag。
 
