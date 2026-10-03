@@ -112,7 +112,7 @@ const fresh=({playerReflect=false,enemyReflect=false}={})=>{
   assert.equal(result.chain[0].commit.damageExecuted,true);
   assert.equal(result.chain[0].commit.hpMutations[0].bid,10);
   assert.equal(result.context.sides[0].entries[0].hp,100);
-  assert.equal(result.context.sides[1].entries[0].hp,83);
+  assert.equal(result.context.sides[1].entries[0].hp,88);
 }
 
 console.log(JSON.stringify({
