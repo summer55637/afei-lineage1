@@ -35,7 +35,10 @@ const rows=raw.split(/\r?\n/).map((v,i)=>parse(v,i+1)).filter(Boolean);
 const groups=[];
 
 function addReverseStartGroups(){
-  const all=[...(startCatalog.nextFloorPortals?.to100??[]),...(startCatalog.nextFloorPortals?.to200??[])];
+  const all=Array.isArray(startCatalog.nextFloorPortals) ? startCatalog.nextFloorPortals : [
+    ...(startCatalog.nextFloorPortals?.to100??[]),
+    ...(startCatalog.nextFloorPortals?.to200??[])
+  ];
   for(const group of all){
     groups.push({
       id:String(group.id).replace(/^([0-9]+)_to_([0-9]+)_/, '$2_to_$1_'),
