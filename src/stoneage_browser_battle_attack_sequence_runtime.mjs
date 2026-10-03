@@ -199,13 +199,6 @@ async function resolveAttackSequence(context,{
     }
     if(!commit.ok)return {...commit,stage:'battle-attack-sequence-commit',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
     next.context=clone(commit.battleContext?.context??commit.battleContext??next.context);
-    const relife=runtimes.relifeRuntime.apply(
-      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
-      {trigger:'outer-add-profit',now}
-    );
-    if(!relife.ok)return {...relife,stage:'battle-attack-sequence-relife',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
-    next.context=clone(relife.context);
-    hit.relife=clone(relife);
     const profitCredit=runtimes.profitCreditRuntime.apply(
       {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
       {
@@ -223,6 +216,13 @@ async function resolveAttackSequence(context,{
     if(!profitCredit.ok)return {...profitCredit,stage:'battle-attack-sequence-profit-credit',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
     next.context=clone(profitCredit.context);
     hit.profitCredit=clone(profitCredit);
+    const relife=runtimes.relifeRuntime.apply(
+      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+      {trigger:'outer-add-profit',now}
+    );
+    if(!relife.ok)return {...relife,stage:'battle-attack-sequence-relife',action:ACTION_BATTLE_ATTACK_SEQUENCE_RESOLVE,hitIndex:i,partialContext:clone(next.context),hits:clone(hits)};
+    next.context=clone(relife.context);
+    hit.relife=clone(relife);
     const creditEvent=Array.isArray(profitCredit.newCredits)
       ? profitCredit.newCredits.find(x=>x?.enemyBid===prelude.finalTargetBid)
       : null;
