@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：52f2e9e — ci: add V4.55 carried loot regression workflow
-- 更新時間：2026-10-03T19:15:39+08:00
+- 最新 commit：69af326 — feat: add source-backed transient enemy EXP credit runtime
+- 更新時間：2026-10-03T19:17:54+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.55
 - Playable HTML：⏸️ 尚未建立（刻意保留）
