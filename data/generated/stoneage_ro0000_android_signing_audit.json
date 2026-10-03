@@ -71,6 +71,22 @@
       }
     ]
   },
+  "v1ManifestEntryDigests": {
+    "status": "mismatch",
+    "manifestEntry": "META-INF/MANIFEST.MF",
+    "entryCount": 35,
+    "digestCount": 35,
+    "matchedDigestCount": 33,
+    "mismatchDigestCount": 2,
+    "mismatchEntries": [
+      "lib/armeabi-v7a/libStoneage.so",
+      "lib/x86/libStoneage.so"
+    ],
+    "missingEntries": [],
+    "unsupportedDigests": [],
+    "invalidDigests": [],
+    "scope": "JAR v1 per-entry digest comparison only; this does not verify the signature block or publisher identity."
+  },
   "certificateFingerprints": [
     {
       "entry": "META-INF/CERT.RSA",
