@@ -116,6 +116,9 @@ function planBattleExp(battleContext,state,{
       workGetExp:petWorkGetExp,
       persistentWorkGetExpBefore:persistentPetWorkGetExp,
       workGetExpSource:contextPet?.workGetExp!=null?'battle-context-transient':'persistent-state-fallback',
+      variableAi:intOr(contextPet?.variableAi,intOr(pet?.variableAi,0)),
+      persistentVariableAiBefore:intOr(pet?.variableAi,0),
+      variableAiSource:contextPet?.variableAi!=null?'battle-context-transient':'persistent-state-fallback',
       calculation:applyBattleExpFormula({
         workGetExp:petWorkGetExp,
         itemExpModifierPercent,
