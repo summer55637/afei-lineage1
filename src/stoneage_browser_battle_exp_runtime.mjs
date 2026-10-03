@@ -85,10 +85,8 @@ function planBattleExp(battleContext,state,{
     return {ok:false,handled:false,stage:'battle-exp-plan',reason:'battle-player-identity-mismatch',persistentPlayerId:playerId,battleCharacterId:battlePlayerId};
   }
 
-  const playerWorkGetExp=intOr(playerEntry.workGetExp,state.player.workGetExp??0);
-  if(playerEntry.workGetExp!=null && state.player.workGetExp!=null && playerWorkGetExp!==intOr(state.player.workGetExp,0)){
-    return {ok:false,handled:false,stage:'battle-exp-plan',reason:'player-workgetexp-mismatch',battleWorkGetExp:playerWorkGetExp,stateWorkGetExp:intOr(state.player.workGetExp,0)};
-  }
+  const persistentPlayerWorkGetExp=intOr(state.player.workGetExp,0);
+  const playerWorkGetExp=intOr(playerEntry.workGetExp,persistentPlayerWorkGetExp);
   const playerCalc=applyBattleExpFormula({
     workGetExp:playerWorkGetExp,
     itemExpModifierPercent,
@@ -105,19 +103,19 @@ function planBattleExp(battleContext,state,{
     if(!id||seen.has(id))continue;
     seen.add(id);
     const petExp=intOr(pet.exp,0);
-    const petWorkGetExp=intOr(pet.workGetExp,0);
+    const persistentPetWorkGetExp=intOr(pet.workGetExp,0);
     if(pet?.isDie===true)continue;
     const contextPet=resolveActivePetEntry(battleContext,id);
     // Fixed-C awards battle EXP only to participants present in the active battle roster.
     if(!contextPet||contextPet.isDie===true)continue;
+    const petWorkGetExp=intOr(contextPet?.workGetExp,persistentPetWorkGetExp);
     if(petWorkGetExp<=0)continue;
-    if(contextPet&&contextPet.workGetExp!=null&&petWorkGetExp!==intOr(contextPet.workGetExp,0)){
-      return {ok:false,handled:false,stage:'battle-exp-plan',reason:'pet-workgetexp-mismatch',petId:id,contextWorkGetExp:intOr(contextPet.workGetExp,0),stateWorkGetExp:petWorkGetExp};
-    }
     petPlans.push({
       petId:id,
       level:intOr(contextPet?.level??pet.level,1),
       workGetExp:petWorkGetExp,
+      persistentWorkGetExpBefore:persistentPetWorkGetExp,
+      workGetExpSource:contextPet?.workGetExp!=null?'battle-context-transient':'persistent-state-fallback',
       calculation:applyBattleExpFormula({
         workGetExp:petWorkGetExp,
         itemExpModifierPercent,
@@ -145,6 +143,8 @@ function planBattleExp(battleContext,state,{
       characterId:battlePlayerId||playerId||null,
       level:intOr(playerEntry.level??state.player.level,1),
       workGetExp:playerWorkGetExp,
+      persistentWorkGetExpBefore:persistentPlayerWorkGetExp,
+      workGetExpSource:playerEntry.workGetExp!=null?'battle-context-transient':'persistent-state-fallback',
       currentExp:intOr(state.player.exp,0),
       calculation:playerCalc
     },
