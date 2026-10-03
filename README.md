@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：4cb63e5 — test: add ordinary PVE finish-hook profile to V4.65 fixture
-- 更新時間：2026-10-03T20:30:49+08:00
+- 最新 commit：7e623a1 — test: tolerate IEEE-754 Ride Pet defence tail
+- 更新時間：2026-10-03T20:34:24+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.65
 - Playable HTML：⏸️ 尚未建立（刻意保留）
