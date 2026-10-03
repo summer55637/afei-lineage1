@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：233c49c — fix: normalize status runtime context in battle round
-- 更新時間：2026-10-03T21:47:53+08:00
+- 最新 commit：b2100b8 — feat: add V4.68 browser pet final-exit state sync
+- 更新時間：2026-10-03T22:05:14+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.67
+- Regression 最高版本：V4.68
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.67 |
+| Battle Pipeline | ✅ V4.68 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
