@@ -1,3 +1,4 @@
+# re-run guard: current main compatibility
 name: Check V4.53 browser battle unarmed AttackCount
 on:
   push:
