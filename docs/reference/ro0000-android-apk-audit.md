@@ -687,3 +687,18 @@ APK 的職業技能資料接收鏈已再閉合一層，這次直接從 target na
 - 目前仍不把 Lua `getProfessionSkillType` 的數值表硬推成產品語義，因為對應 Lua 函式本體不在 APK 封裝內。
 
 Machine-readable evidence：`data/generated/stoneage_ro0000_android_profession_skill_runtime_contract.json`。
+
+
+## BATTLESKILL non-battle profession-skill protocol
+
+目標 APK 的 `BATTLESKILL` 鏈已在 x86 與 ARMv7a 兩個 native ABI 都確認。
+
+- x86 `lssproto_BATTLESKILL_send(int,int)` 位於 `0x409500`；ARMv7a 位於 `0x28ee19`。兩者都把單一 `skillNum` 以 `util_mkint` 編碼、加入 checksum，再以 message type `110 (0x6e)` 呼叫 `util_SendMesg`。
+- x86 `lssproto_BATTLESKILL_recv(int,char*)` 位於 `0x284f50`；ARMv7a 位於 `0x1c3db9`。兩者都直接對完整 `data` 做 `SDL_atoi`，取得 native player state 的 active `ACTION`（觀察到 offset `+0x5504`），再呼叫 `setCharMind(activeAction, parsedInt)`。目標函式本身沒有看到額外欄位解析或封包語義判斷。
+- 目標 dispatcher 會先處理封包 framing/checksum，再進入 `lssproto_BATTLESKILL_recv`；因此 `BATTLESKILL` 的 body 是「一個整數」而不是 `H/J/W/P` 這類 battle command string。
+- `ScriptFunc_petSkillState` 也完成雙 ABI 對照：x86 `0x39dfe0`、34 bytes；ARMv7a `0x256fc9`、20 bytes。可見 body 最終固定回傳 `1`，參數只被保存到 stack temporary，沒有觀察到可命名的 gameplay state 寫入；因此目前只標為 script success bridge，不替它賦予未證實的「寵技狀態」語義。
+- 作為 server 端的外部交叉驗證，公開 Fixed-C C source 的 `GmsvServer_BATTLESKILL_recv` 會在非戰鬥狀態下，把收到的 skill number 透過 `PROFESSION_SKILL_GetArray` 對回職業技能，檢查角色職業，最後呼叫 `PROFESSION_SKILL_Use`。這部分明確標記為 cross-source semantic reference，沒有宣稱與 target APK 為同一 server/version。
+
+因此，對目前重建專案最安全的模型是：`BATTLESKILL` 與戰鬥中的 `P|...` 職業技能命令分開；前者是非戰鬥的整數技能通道，後者才是 battle target-selection command。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battleskill_protocol_contract.json`。
