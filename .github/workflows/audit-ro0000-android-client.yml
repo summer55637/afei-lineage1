@@ -95,7 +95,7 @@ jobs:
           python3 tools/check_ro0000_android_native_contracts.py \
             --native-audit artifacts/ro0000_android_native_elf_audit.json \
             --loop-contract data/generated/stoneage_ro0000_android_client_loop_contract.json \
-            --movement-contract data/generated/stoneage_ro0000_android_map_movement_contract.json
+            --movement-contract data/generated/stoneage_ro0000_android_map_movement_contract.json \\
             --resource-layout data/generated/stoneage_ro0000_android_native_resource_layout.json
       - name: Cross-check every DEX native declaration against all packaged libraries
         run: |
