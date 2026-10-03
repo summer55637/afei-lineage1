@@ -657,3 +657,18 @@ Android target 的 getAutoAct() 已確認為實際遊戲互動 hook。
 這可直接轉成 browser action／interaction contract；Lua autoactMap 本身內容與 AC 封包的 server-side 語義仍未由 APK 單獨證明。
 
 Machine-readable evidence：data/generated/stoneage_ro0000_android_auto_action_contract.json。
+
+
+## Battle target routing and skill command protocol
+
+Android target 的戰鬥目標選擇鏈已再往下閉合，證據直接來自目標 APK 的 x86 `libStoneage.so`；這一節不把公開 Fixed-C C source 的名稱或版本直接套回 APK。
+
+- `BattleSetWazaHitBox(int,int)`：x86 `0x1011c0`、7498 bytes。第一參數在 `typeflag=0` 時是技能索引；`typeflag=1` 時直接視為 target mode。目標模式 0..11 已逐項追到 native 分支，包含自己、單目標、我方/敵方整側、全體、不含自己/寵物、單排、單線、死亡目標，以及特殊單排模式。
+- 寵物技能 target 欄位位於每筆 record 的 `+0x06`；x86 觀察到 per-skill stride 154 bytes、per-pet stride 5390 bytes。職業技能 target 欄位位於 `+0x04`，record stride 280 bytes（`0x118`），costmp 位於 `+0x10c`，skillId 位於 `+0x02`。
+- `BattleTargetSelect()`：x86 `0x103c50`、7001 bytes。已確認六種命令型態：一般攻擊、咒術、抓捕、道具、寵技、職業技能。
+- 目標 APK 的封包字串已直接閉合：`H|%X`（攻擊）、`T|%X`（抓捕）、`J|%X|%X`（咒術）、`I|%X|%X`（道具）、`W|%X|%X`（寵技）、`P|%X|%X`（職業技能）。此外存在地圖型寵技的 `W|FF|FF` 路徑。
+- 職業技能的整側/全體 target code 已直接確認：我方為 `0x14/0x15`、敵方為相反側的 `0x15/0x14`、全體為 `0x16`；特殊 target mode 8/11 依選取位置 0..4、5..9、10..14、15..19 映射到 `0x1a/0x19/0x17/0x18`。普通直接目標則直接使用選到的 target index。
+- native 中另有未輸出的本地 helper（起點約 `0x10bcb0`），會以 target state 的 `+0xc0` 值與職業技能 `costmp` 比較；一般條件是資源值不小於 costmp。當資源不足時，實際 APK 額外允許 skillId 75/76/77，但僅在該技能 costmp==0 的情況下成立；成功後寫入選定職業技能索引並呼叫 `BattleSetWazaHitBox(target,1)`。
+- 目前可以安全用來重建 browser 的「技能目標模式 + 封包組裝 + 職業技能自動提名門檻」。但 server 對 `0x14..0x1a` target code 的最終語義、傷害/狀態/MP 扣除/cooldown，以及 `+0xc0` 的完整結構名稱仍未由 APK 單獨證明。
+
+Machine-readable evidence：`data/generated/stoneage_ro0000_android_battle_target_protocol_contract.json`。
