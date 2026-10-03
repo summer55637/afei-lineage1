@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：9feb80a — [docs] map ADRNBIN structure with target anchors
-- 更新時間：2026-10-03T08:30:09+08:00
+- 最新 commit：fa8b221 — [test] cover nearest palette lookup focus
+- 更新時間：2026-10-03T08:33:20+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
