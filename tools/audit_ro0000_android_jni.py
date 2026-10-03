@@ -75,14 +75,18 @@ def summarize_onload_disassembly(disassembly):
     """Keep only call-level evidence; do not publish raw vendor disassembly."""
     calls = []
     indirect_calls = 0
-    instruction_count = 0
+    instruction_lines = []
     for line in disassembly.splitlines():
-        if not re.match(r"^\s*[0-9a-fA-F]+:", line):
+        match = re.match(r"^\s*([0-9a-fA-F]+):", line)
+        if not match:
             continue
-        instruction_count += 1
+        address = int(match.group(1), 16)
         rest = line.split(":", 1)[1].strip()
         if not rest:
             continue
+        # Normalize whitespace and omit runner-specific file/header text so
+        # the evidence fingerprint remains stable across CI executions.
+        instruction_lines.append("%x:%s" % (address, " ".join(rest.split())))
         fields = rest.split(None, 1)
         mnemonic = fields[0].lower()
         operands = fields[1] if len(fields) > 1 else ""
@@ -100,15 +104,15 @@ def summarize_onload_disassembly(disassembly):
                 calls.append(name)
         elif operands.lstrip().startswith("*") or mnemonic.startswith("blx"):
             indirect_calls += 1
+    normalized = "\n".join(instruction_lines)
     return {
-        "instructionLineCount": instruction_count,
+        "instructionLineCount": len(instruction_lines),
         "directCallTargets": sorted(set(calls)),
         "indirectCallSiteCount": indirect_calls,
         "disassemblySha256": hashlib.sha256(
-            disassembly.encode("utf-8", errors="replace")
+            normalized.encode("utf-8", errors="replace")
         ).hexdigest(),
     }
-
 
 def relevant_native_strings(binary_data, declarations):
     """Find class and method names that appear as printable ELF strings."""
