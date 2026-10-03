@@ -1,0 +1,44 @@
+name: Check V4.66 browser battle full settlement chain
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stoneage_browser_battle_death_extra_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_relife_runtime.mjs'
+      - 'src/stoneage_browser_battle_relife_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_levelup_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_end_runtime.mjs'
+      - 'src/stoneage_browser_battle_finish_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_settlement_runtime.mjs'
+      - 'src/stoneage_browser_battle_player_exit_runtime.mjs'
+      - 'src/stoneage_browser_battle_player_exit_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_exit_runtime.mjs'
+      - 'src/stoneage_browser_battle_exit_commit_runtime.mjs'
+      - 'src/stoneage_browser_battle_context_clear_runtime.mjs'
+      - 'tools/check_v466_browser_battle_full_settlement_chain.mjs'
+      - '.github/workflows/check-v466-browser-battle-full-settlement-chain.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run V4.66 full settlement chain regression
+        run: node tools/check_v466_browser_battle_full_settlement_chain.mjs
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/stoneage_browser_battle_death_extra_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_relife_runtime.mjs
+          node --check src/stoneage_browser_battle_relife_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_levelup_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_end_runtime.mjs
+          node --check src/stoneage_browser_battle_finish_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_settlement_runtime.mjs
+          node --check src/stoneage_browser_battle_player_exit_runtime.mjs
+          node --check src/stoneage_browser_battle_player_exit_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_exit_runtime.mjs
+          node --check src/stoneage_browser_battle_exit_commit_runtime.mjs
+          node --check src/stoneage_browser_battle_context_clear_runtime.mjs
+          node --check tools/check_v466_browser_battle_full_settlement_chain.mjs
