@@ -8,6 +8,7 @@ import { createBrowserBattleAttackSeqPreludeRuntime } from '../src/stoneage_brow
 import { createBrowserBattleDamagePlanRuntime } from '../src/stoneage_browser_battle_damage_plan_runtime.mjs';
 import { createBrowserBattleCriticalDamageRuntime } from '../src/stoneage_browser_battle_critical_damage_runtime.mjs';
 import { createBrowserBattleDamageReactRuntime } from '../src/stoneage_browser_battle_damage_react_runtime.mjs';
+import { createBrowserBattleDamageReactCommitRuntime } from '../src/stoneage_browser_battle_damage_react_commit_runtime.mjs';
 import { createBrowserBattleDamageDeathChainRuntime } from '../src/stoneage_browser_battle_damage_death_chain_runtime.mjs';
 
 const entry=(bid,sourceType)=>({
@@ -58,6 +59,7 @@ const runtimes={
   damagePlanRuntime:createBrowserBattleDamagePlanRuntime(),
   criticalDamageRuntime:createBrowserBattleCriticalDamageRuntime(),
   damageReactRuntime:createBrowserBattleDamageReactRuntime(),
+  damageReactCommitRuntime:createBrowserBattleDamageReactCommitRuntime(),
   damageDeathChainRuntime:createBrowserBattleDamageDeathChainRuntime()
 };
 const chainRuntime=createBrowserBattleCounterChainRuntime(runtimes);
