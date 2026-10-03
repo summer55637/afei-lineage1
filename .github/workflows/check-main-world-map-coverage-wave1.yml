@@ -1,0 +1,68 @@
+name: Verify main-world map coverage wave 1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/check-main-world-map-coverage-wave1.yml'
+      - 'tools/generate_main_world_map_coverage_wave1.mjs'
+      - 'tools/check_main_world_map_coverage_wave1.mjs'
+      - 'tools/generate_verified_map_runtime.mjs'
+      - 'tools/stoneage_ls2map_parser.mjs'
+      - 'tools/check_v314_stoneage_map_headers.mjs'
+      - 'data/generated/stoneage_map_runtime_index.json'
+      - 'data/generated/stoneage_mapset_runtime.json'
+      - 'data/generated/stoneage_battlefield_source_manifest.json'
+      - 'data/generated/stoneage_world_graph_index.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: main-world-map-coverage-wave1
+  cancel-in-progress: true
+
+jobs:
+  verify-and-promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned fixed-C source
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout https://github.com/gavinlinasd/StoneAge.git /tmp/StoneAge
+          git -C /tmp/StoneAge fetch --depth 1 origin 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          git -C /tmp/StoneAge checkout --detach 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+
+      - name: Build exact fixed-C LS2MAP header catalog
+        run: |
+          set -euo pipefail
+          node tools/check_v314_stoneage_map_headers.mjs /tmp/StoneAge/gmsv/data/map
+
+      - name: Generate wave-1 main-world runtimes
+        run: |
+          set -euo pipefail
+          node tools/generate_main_world_map_coverage_wave1.mjs             --source-root /tmp/StoneAge             --header-catalog /tmp/stoneage-map-header-catalog.json             --allow-partial
+
+      - name: Verify promoted runtimes
+        run: |
+          set -euo pipefail
+          node tools/check_main_world_map_coverage_wave1.mjs
+
+      - name: Commit promoted map runtimes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/generated/stoneage_map_*.json                   data/generated/stoneage_map_runtime_index.json                   data/generated/stoneage_main_world_map_coverage_wave1.json
+          if git diff --cached --quiet; then
+            echo "No map-runtime changes to promote."
+            exit 0
+          fi
+          git commit -m "[map-coverage] promote main-world wave 1"
+          git push origin HEAD:main
