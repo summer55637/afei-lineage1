@@ -40,6 +40,7 @@ assert.equal(playerUltimate.ok,true,JSON.stringify(playerUltimate));
 assert.equal(playerUltimate.context.sides[0].entries[0].charm,18);
 assert.equal(playerUltimate.context.sides[0].entries[5],null);
 assert.equal(playerUltimate.newEvents[0].defaultPetEvent.variableAiDelta,-500);
+assert.equal(playerUltimate.newEvents[0].defaultPetRelationPreserved,true);
 
 const petNormal=runtime.apply(baseContext({petDead:true,petLevel:10,petId:500,variableAi:600}),{});
 assert.equal(petNormal.ok,true,JSON.stringify(petNormal));
