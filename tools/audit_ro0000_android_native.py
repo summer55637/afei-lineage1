@@ -65,7 +65,7 @@ FOCUSED_FUNCTION_RE = re.compile(
     r"DrawBattleMap|ddrawBattleMap|PutTileBmp|DrawAutoMapping|MakeHitBox|MakeAnimDisp|"
     r"getRouteMap|updateMapArea|setMapMovePoint2|setMapMovePoint|_setMapMovePoint|"
     r"_mapMove|mapMove2|_partyMapMove|mapCheckSum|getMapArea(?:Cnt|X1|X2|Y1|Y2)|"
-    r"createAutoMap|initAutoMapColor|makeAutoMapColor|getAutoMapColor|readAutoMapColor|writeAutoMapColor|"
+    r"createAutoMap|initAutoMapColor|makeAutoMapColor|getAutoMapColor|getNearestColorIndex|readAutoMapColor|writeAutoMapColor|"
     r"initWorldMap|worldMapProc|EndWarpMap|setWarpMap|mapWndProc|drawAutoMap|"
     r"initMapEffect|mapEffectProc2|mapEffectRain2|mapEffectSnow2|mapEffectStar|"
     r"mapEffectRain|mapEffectSnow|mapEffectKamiFubuki|mapEffectFallingStar|getMapEffectBuf|delMapEffectBuf|"
