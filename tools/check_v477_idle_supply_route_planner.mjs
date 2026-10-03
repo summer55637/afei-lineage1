@@ -30,22 +30,37 @@ const routes=[
   {routeId:'hometown-3/floor-4000-to-200/4000_to_200_a',encounterFloor:200,rect:[384,238,516,415]}
 ];
 
-function findWalkablePoint(map,rect){
+const { findPathToTargets }=await import('../src/stoneage_browser_idle_supply_route_runtime.mjs');
+
+function encounterTargets(map,rect){
   const [x1,y1,x2,y2]=rect;
+  const targets=[];
   for(let y=y1;y<=y2;y++){
     for(let x=x1;x<=x2;x++){
-      if(sourceMapWalkableAt(map,x,y,mapset))return {x,y,floorId:Number(map.floorId)};
+      if(sourceMapWalkableAt(map,x,y,mapset))targets.push({x,y});
     }
   }
-  return null;
+  return targets;
 }
 
 const routePoints={};
 for(const row of routes){
   const map=await loadMap(row.encounterFloor);
-  const point=findWalkablePoint(map,row.rect);
-  assert.ok(point,`no walkable encounter point for ${row.routeId}`);
-  routePoints[row.routeId]=point;
+  const reverseGroup=warpCatalog.groups.find(g=>g.kind==='encounter-return'&&g.sourceDerivedFrom===row.routeId.split('/').pop());
+  assert.ok(reverseGroup,`missing reverse group for ${row.routeId}`);
+  const portalTarget=reverseGroup.rows[0].from;
+  const reachable=await findPathToTargets(
+    map,
+    mapset,
+    {x:Number(portalTarget[0]),y:Number(portalTarget[1])},
+    encounterTargets(map,row.rect)
+  );
+  assert.equal(reachable.ok,true,JSON.stringify(reachable));
+  routePoints[row.routeId]={
+    x:reachable.target.x,
+    y:reachable.target.y,
+    floorId:Number(map.floorId)
+  };
 }
 
 const runtime=createBrowserIdleSupplyRouteRuntime({
