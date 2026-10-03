@@ -1,0 +1,71 @@
+name: check-v475-hospital-map-runtime
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/generate_verified_map_runtime.mjs'
+      - 'tools/check_v475_hospital_map_runtime.mjs'
+      - 'tools/stoneage_ls2map_parser.mjs'
+      - 'data/generated/stoneage_mapset_runtime.json'
+      - '.github/workflows/check-v475-hospital-map-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  hospital-map-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Clone pinned fixed-C source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout https://github.com/gavinlinasd/StoneAge.git fixed-c-source
+          git -C fixed-c-source fetch --depth 1 origin 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+          git -C fixed-c-source checkout --detach 1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
+
+      - name: Generate hospital floor 1005
+        run: |
+          node tools/generate_verified_map_runtime.mjs             --floor 1005             --source-path gmsv/data/map/sainasu/samugiru/1005             --source-root fixed-c-source             --out data/generated/stoneage_map_1005.json             --index data/generated/stoneage_map_runtime_index.json
+
+      - name: Generate hospital floor 2005
+        run: |
+          node tools/generate_verified_map_runtime.mjs             --floor 2005             --source-path gmsv/data/map/sainasu/marinasu/2005             --source-root fixed-c-source             --out data/generated/stoneage_map_2005.json             --index data/generated/stoneage_map_runtime_index.json
+
+      - name: Generate hospital floor 3005
+        run: |
+          node tools/generate_verified_map_runtime.mjs             --floor 3005             --source-path gmsv/data/map/jyaruga/jaja/3005             --source-root fixed-c-source             --out data/generated/stoneage_map_3005.json             --index data/generated/stoneage_map_runtime_index.json
+
+      - name: Generate hospital floor 4005
+        run: |
+          node tools/generate_verified_map_runtime.mjs             --floor 4005             --source-path gmsv/data/map/jyaruga/karutana/4005             --source-root fixed-c-source             --out data/generated/stoneage_map_4005.json             --index data/generated/stoneage_map_runtime_index.json
+
+      - name: Run V4.75 hospital map regression
+        run: node tools/check_v475_hospital_map_runtime.mjs
+
+      - name: Syntax check
+        run: |
+          node --check tools/generate_verified_map_runtime.mjs
+          node --check tools/check_v475_hospital_map_runtime.mjs
+          node --check tools/stoneage_ls2map_parser.mjs
+
+      - name: Commit generated hospital maps
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             data/generated/stoneage_map_1005.json             data/generated/stoneage_map_2005.json             data/generated/stoneage_map_3005.json             data/generated/stoneage_map_4005.json             data/generated/stoneage_map_runtime_index.json
+          if git diff --cached --quiet; then
+            echo "Hospital map runtimes already current."
+            exit 0
+          fi
+          git commit -m "[docs] auto-update V4.75 hospital map runtime"
+          git push origin HEAD:main
