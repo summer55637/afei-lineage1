@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：482afca — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-03T00:53:59Z
+- 最新 commit：f2f1297 — [workflow] remove superseded JNI artifacts
+- 更新時間：2026-10-03T08:54:27+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
