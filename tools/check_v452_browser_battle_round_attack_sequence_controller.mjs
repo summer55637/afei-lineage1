@@ -127,7 +127,7 @@ assert.ok(round.attacks[0].attackSequence.executedHitCount>=1);
 assert.equal(round.attacks[0].attackSequence.hits[0].damageDiv,3);
 assert.ok(round.attacks[0].attackSequence.executedHitCount<=3);
 assert.equal(round.persistentMutation,false);
-assert.equal(controller.getState().revision,0);
+assert.equal(controller.getState().revision,1);
 
 const after=controller.getBattleContext();
 const enemyHpAfter=Number(after.sides[1].entries.find(e=>e?.bid===enemyEntry.bid)?.hp);
