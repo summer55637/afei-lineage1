@@ -174,8 +174,55 @@
                   "indirectCallSiteCount": 2,
                   "disassemblySha256": "a9a297c4170512c87d120fb28a9e5123b63b6ab494583769c1dd4ec10715098a"
                 },
-                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation.",
-                "candidateDeclarationStringPresence": [
+                "candidateNativeMethodStrings": [
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKeyboardChange",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKoLoginFailed",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKoLoginSuccess",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackOrderCheck",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackZipProgress",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "refreshBatteryInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
                     "name": "GetHeadsetVoipState",
@@ -190,7 +237,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 18
                   },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
@@ -198,7 +245,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 20
                   },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
@@ -230,7 +277,47 @@
                     "classPathLiteralPresent": true,
                     "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 4
+                    "matchingMethodStringCount": 5
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "appendNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "appendWholeNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "getNativeKeyValueList",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "getNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "putNativeKeyValue",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -241,12 +328,36 @@
                     "matchingMethodStringCount": 8
                   },
                   {
-                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
-                    "name": "ApplyMessageKey",
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "removeNativeKeyValue",
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
-                    "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "setNativeInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "testCrash",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "unregist",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -254,7 +365,15 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 25
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ApplyMessageKey",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": true,
+                    "matchingMethodStringCount": 25
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -262,7 +381,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 4
+                    "matchingMethodStringCount": 6
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -278,7 +397,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 7
+                    "matchingMethodStringCount": 10
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -286,7 +405,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 7
+                    "matchingMethodStringCount": 10
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -294,7 +413,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 11
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -302,7 +421,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 11
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -310,7 +429,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 5
+                    "matchingMethodStringCount": 8
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -326,7 +445,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 1
+                    "matchingMethodStringCount": 2
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -334,7 +453,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 13
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -342,7 +461,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 15
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -350,7 +469,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -358,7 +477,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -366,7 +485,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 361
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -374,7 +493,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 18
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -390,7 +509,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 32
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -398,7 +517,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 32
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -406,7 +525,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 33
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -414,7 +533,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 33
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -422,7 +541,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 16
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -430,7 +549,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 15
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -438,7 +557,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 18
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -446,7 +565,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 20
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -454,7 +573,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 8
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -462,7 +581,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 66
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -470,7 +589,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 20
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -478,7 +597,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -486,7 +605,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -502,7 +621,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 20
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -510,7 +629,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 16
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -518,7 +637,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -526,7 +645,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 5
+                    "matchingMethodStringCount": 8
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -542,7 +661,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 29
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -550,7 +669,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 29
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -558,7 +677,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -566,7 +685,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -574,7 +693,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 5
+                    "matchingMethodStringCount": 8
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -582,7 +701,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 11
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -590,7 +709,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -598,9 +717,386 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceConnected",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceDisconnected",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceFeatureReport",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceInputReport",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceOpenPending",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceOpenResult",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceRegisterCallback",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceReleaseCallback",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeAddTouch",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeFocusChanged",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeGetHint",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeLowMemory",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativePause",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeQuit",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeResume",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeRunMain",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeSendQuit",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeSetScreenResolution",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeSetenv",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeSetupJNI",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeAccel",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeClipboardChanged",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeDropFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeKeyDown",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeKeyUp",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeKeyboardFocusLost",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeMouse",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeOrientationChanged",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeResize",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeSoftReturnKey",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeSurfaceChanged",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeSurfaceCreated",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeSurfaceDestroyed",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeTouch",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLAudioManager;",
+                    "name": "nativeSetupJNI",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeAddHaptic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeAddJoystick",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeRemoveHaptic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeRemoveJoystick",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeSetupJNI",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "onNativeHat",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "onNativeJoy",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "onNativePadDown",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "onNativePadUp",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLInputConnection;",
+                    "name": "nativeCommitText",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLInputConnection;",
+                    "name": "nativeGenerateScancodeForUnichar",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLInputConnection;",
+                    "name": "nativeSetComposingText",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   }
-                ]
+                ],
+                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
               }
             ]
           },
@@ -661,15 +1157,70 @@
                   "indirectCallSiteCount": 0,
                   "disassemblySha256": "5e992b3d853021401b0d9c28596ccac8db7d5f546c919b81b6ad11975e2d3d93"
                 },
-                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation.",
-                "candidateDeclarationStringPresence": [
+                "candidateNativeMethodStrings": [
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKeyboardChange",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKoLoginFailed",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKoLoginSuccess",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackOrderCheck",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackZipProgress",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "refreshBatteryInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
+                    "name": "GetHeadsetVoipState",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
                     "name": "Pause",
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 15
                   },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
@@ -677,7 +1228,23 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 13
+                  },
+                  {
+                    "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
+                    "name": "StartBlueTooth",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
+                    "name": "StopBlueTooth",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/apollo/apollovoice/httpclient/SRTTAPIHTTPTaskQueueImp;",
@@ -688,6 +1255,54 @@
                     "matchingMethodStringCount": 7
                   },
                   {
+                    "class": "Lcom/tencent/apollo/apollovoice/httpclient/URLRequest;",
+                    "name": "response",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "appendNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "appendWholeNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "getNativeKeyValueList",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "getNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "putNativeKeyValue",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
                     "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
                     "name": "regist",
                     "classPathLiteralPresent": false,
@@ -696,12 +1311,228 @@
                     "matchingMethodStringCount": 2
                   },
                   {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "removeNativeKeyValue",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "setNativeInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "testCrash",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "unregist",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ApplyMessageKey",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ApplyMessageKey",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "CaptureMicrophoneData",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ChangeRole",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "CloseMic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "CloseSpeaker",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "DownloadRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "DownloadRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "EnableLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "EnableSpeakerOn",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "EngineJniInstance",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ForbidMemberVoice",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "GetFileParam",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "GetMicLevel",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "GetSpeakerLevel",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
                     "name": "Init",
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 41
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "Invoke",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "IsSpeaking",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "JoinNationalRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "JoinNationalRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "JoinTeamRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "JoinTeamRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "OpenMic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "OpenSpeaker",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -709,7 +1540,15 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 15
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "PlayRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -721,17 +1560,217 @@
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "QuitRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
                     "name": "Resume",
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 13
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetAppInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetMaxMessageLength",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetMicVolume",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetMode",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetNotify",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetServerInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetSpeakerVolume",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetVoiceEffects",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SpeechToText",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SpeechToText",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "StartRecording",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "StopPlayFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "StopRecording",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "TestMic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "UploadRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "UploadRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceConnected",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceDisconnected",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceFeatureReport",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceInputReport",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceOpenPending",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceOpenResult",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceRegisterCallback",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceReleaseCallback",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeAddTouch",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -739,7 +1778,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeFocusChanged",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 2
                   },
@@ -747,7 +1786,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeGetHint",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -755,7 +1794,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeLowMemory",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -763,7 +1802,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativePause",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 2
                   },
@@ -771,7 +1810,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeQuit",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -779,7 +1818,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeResume",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 2
                   },
@@ -787,7 +1826,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeRunMain",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 4
                   },
@@ -795,7 +1834,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeSendQuit",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -803,7 +1842,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeSetScreenResolution",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -811,7 +1850,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeSetenv",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -819,7 +1858,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeSetupJNI",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 6
                   },
@@ -827,7 +1866,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeAccel",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -835,7 +1874,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeClipboardChanged",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -843,7 +1882,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeDropFile",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -851,7 +1890,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeKeyDown",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -859,7 +1898,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeKeyUp",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -867,7 +1906,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeKeyboardFocusLost",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -875,7 +1914,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeMouse",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -883,7 +1922,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeOrientationChanged",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -891,7 +1930,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeResize",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -899,7 +1938,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeSoftReturnKey",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -907,7 +1946,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeSurfaceChanged",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -915,7 +1954,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeSurfaceCreated",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -923,7 +1962,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeSurfaceDestroyed",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -931,7 +1970,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeTouch",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -947,7 +1986,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeAddHaptic",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -955,7 +1994,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeAddJoystick",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -963,7 +2002,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeRemoveHaptic",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -971,7 +2010,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeRemoveJoystick",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -979,7 +2018,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeSetupJNI",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 6
                   },
@@ -987,7 +2026,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "onNativeHat",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -995,7 +2034,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "onNativeJoy",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -1003,7 +2042,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "onNativePadDown",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -1011,7 +2050,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "onNativePadUp",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -1039,7 +2078,8 @@
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   }
-                ]
+                ],
+                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
               }
             ]
           },
@@ -3357,8 +4397,55 @@
                   "indirectCallSiteCount": 2,
                   "disassemblySha256": "295c3282999a9b9b5bf7b101d8e482e4958ec12fb7497a0ba73857721d7f5d07"
                 },
-                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation.",
-                "candidateDeclarationStringPresence": [
+                "candidateNativeMethodStrings": [
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKeyboardChange",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKoLoginFailed",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKoLoginSuccess",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackOrderCheck",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackZipProgress",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "refreshBatteryInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
                     "name": "GetHeadsetVoipState",
@@ -3373,7 +4460,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 18
                   },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
@@ -3381,7 +4468,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 16
                   },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
@@ -3413,7 +4500,47 @@
                     "classPathLiteralPresent": true,
                     "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 4
+                    "matchingMethodStringCount": 5
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "appendNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "appendWholeNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "getNativeKeyValueList",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "getNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "putNativeKeyValue",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -3421,7 +4548,39 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 17
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "removeNativeKeyValue",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "setNativeInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "testCrash",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "unregist",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3429,7 +4588,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 25
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3437,7 +4596,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 25
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3445,7 +4604,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 4
+                    "matchingMethodStringCount": 6
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3461,7 +4620,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 7
+                    "matchingMethodStringCount": 10
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3469,7 +4628,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 7
+                    "matchingMethodStringCount": 10
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3477,7 +4636,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 11
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3485,7 +4644,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 11
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3493,7 +4652,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 5
+                    "matchingMethodStringCount": 8
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3509,7 +4668,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 1
+                    "matchingMethodStringCount": 2
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3517,7 +4676,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 13
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3525,7 +4684,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 15
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3533,7 +4692,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3541,7 +4700,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3549,7 +4708,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 359
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3557,7 +4716,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 18
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3573,7 +4732,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 32
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3581,7 +4740,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 32
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3589,7 +4748,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 33
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3597,7 +4756,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 33
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3605,7 +4764,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 16
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3613,7 +4772,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 15
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3621,7 +4780,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 18
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3629,7 +4788,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 20
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3637,7 +4796,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 8
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3645,7 +4804,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 66
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3653,7 +4812,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 16
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3661,7 +4820,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3669,7 +4828,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3685,7 +4844,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 20
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3693,7 +4852,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 16
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3701,7 +4860,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3709,7 +4868,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 5
+                    "matchingMethodStringCount": 8
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3725,7 +4884,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 29
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3733,7 +4892,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 29
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3741,7 +4900,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3749,7 +4908,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3757,7 +4916,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 5
+                    "matchingMethodStringCount": 8
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3765,7 +4924,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 11
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3773,7 +4932,7 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3781,9 +4940,386 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 6
+                    "matchingMethodStringCount": 9
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceConnected",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceDisconnected",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceFeatureReport",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceInputReport",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceOpenPending",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceOpenResult",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceRegisterCallback",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceReleaseCallback",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeAddTouch",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeFocusChanged",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeGetHint",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeLowMemory",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativePause",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeQuit",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeResume",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeRunMain",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeSendQuit",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeSetScreenResolution",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeSetenv",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "nativeSetupJNI",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeAccel",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeClipboardChanged",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeDropFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeKeyDown",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeKeyUp",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeKeyboardFocusLost",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeMouse",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeOrientationChanged",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeResize",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeSoftReturnKey",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeSurfaceChanged",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeSurfaceCreated",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeSurfaceDestroyed",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLActivity;",
+                    "name": "onNativeTouch",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLAudioManager;",
+                    "name": "nativeSetupJNI",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeAddHaptic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeAddJoystick",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeRemoveHaptic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeRemoveJoystick",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "nativeSetupJNI",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "onNativeHat",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "onNativeJoy",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "onNativePadDown",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLControllerManager;",
+                    "name": "onNativePadUp",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLInputConnection;",
+                    "name": "nativeCommitText",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLInputConnection;",
+                    "name": "nativeGenerateScancodeForUnichar",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/SDLInputConnection;",
+                    "name": "nativeSetComposingText",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   }
-                ]
+                ],
+                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
               }
             ]
           },
@@ -3844,15 +5380,70 @@
                   "indirectCallSiteCount": 0,
                   "disassemblySha256": "ceef939706fb4c35b05736bb2d4c99068f96881d09190eb6123a4471175b370b"
                 },
-                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation.",
-                "candidateDeclarationStringPresence": [
+                "candidateNativeMethodStrings": [
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKeyboardChange",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKoLoginFailed",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackKoLoginSuccess",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackOrderCheck",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "callbackZipProgress",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/newssa/stoneage/ko/JNILibrary;",
+                    "name": "refreshBatteryInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
+                    "name": "GetHeadsetVoipState",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
                     "name": "Pause",
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 15
                   },
                   {
                     "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
@@ -3863,12 +5454,76 @@
                     "matchingMethodStringCount": 7
                   },
                   {
+                    "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
+                    "name": "StartBlueTooth",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/apollo/ApolloVoiceEngine;",
+                    "name": "StopBlueTooth",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
                     "class": "Lcom/tencent/apollo/apollovoice/httpclient/SRTTAPIHTTPTaskQueueImp;",
                     "name": "callback",
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 7
+                  },
+                  {
+                    "class": "Lcom/tencent/apollo/apollovoice/httpclient/URLRequest;",
+                    "name": "response",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "appendNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "appendWholeNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "getNativeKeyValueList",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "getNativeLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "putNativeKeyValue",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
@@ -3879,12 +5534,228 @@
                     "matchingMethodStringCount": 2
                   },
                   {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "removeNativeKeyValue",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "setNativeInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "testCrash",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/bugly/crashreport/crash/jni/NativeCrashHandler;",
+                    "name": "unregist",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ApplyMessageKey",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ApplyMessageKey",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "CaptureMicrophoneData",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ChangeRole",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "CloseMic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "CloseSpeaker",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "DownloadRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "DownloadRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "EnableLog",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "EnableSpeakerOn",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "EngineJniInstance",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "ForbidMemberVoice",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "GetFileParam",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "GetMicLevel",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "GetSpeakerLevel",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
                     "name": "Init",
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 41
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "Invoke",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "IsSpeaking",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "JoinNationalRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "JoinNationalRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "JoinTeamRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "JoinTeamRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "OpenMic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "OpenSpeaker",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3892,7 +5763,15 @@
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
                     "methodNameLiteralPresent": true,
-                    "matchingMethodStringCount": 8
+                    "matchingMethodStringCount": 15
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "PlayRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
@@ -3904,6 +5783,14 @@
                   },
                   {
                     "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "QuitRoom",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
                     "name": "Resume",
                     "classPathLiteralPresent": false,
                     "classSimpleNameLiteralPresent": false,
@@ -3911,10 +5798,202 @@
                     "matchingMethodStringCount": 7
                   },
                   {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetAppInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetMaxMessageLength",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetMicVolume",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetMode",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetNotify",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetServerInfo",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetSpeakerVolume",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SetVoiceEffects",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SpeechToText",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "SpeechToText",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "StartRecording",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "StopPlayFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "StopRecording",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "TestMic",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "UploadRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lcom/tencent/gcloud/voice/GCloudVoiceEngineHelper;",
+                    "name": "UploadRecordedFile",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceConnected",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceDisconnected",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceFeatureReport",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceInputReport",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceOpenPending",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceOpenResult",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceRegisterCallback",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
+                    "class": "Lorg/libsdl/app/HIDDeviceManager;",
+                    "name": "HIDDeviceReleaseCallback",
+                    "classPathLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": false,
+                    "methodNameLiteralPresent": false,
+                    "matchingMethodStringCount": 0
+                  },
+                  {
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeAddTouch",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -3922,7 +6001,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeFocusChanged",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 2
                   },
@@ -3930,7 +6009,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeGetHint",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -3938,7 +6017,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeLowMemory",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -3946,7 +6025,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativePause",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 2
                   },
@@ -3954,7 +6033,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeQuit",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -3962,7 +6041,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeResume",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 2
                   },
@@ -3970,7 +6049,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeRunMain",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 4
                   },
@@ -3978,7 +6057,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeSendQuit",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -3986,7 +6065,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeSetScreenResolution",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -3994,7 +6073,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeSetenv",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4002,7 +6081,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "nativeSetupJNI",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 6
                   },
@@ -4010,7 +6089,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeAccel",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4018,7 +6097,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeClipboardChanged",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4026,7 +6105,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeDropFile",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4034,7 +6113,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeKeyDown",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4042,7 +6121,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeKeyUp",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4050,7 +6129,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeKeyboardFocusLost",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4058,7 +6137,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeMouse",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4066,7 +6145,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeOrientationChanged",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4074,7 +6153,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeResize",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4082,7 +6161,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeSoftReturnKey",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4090,7 +6169,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeSurfaceChanged",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4098,7 +6177,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeSurfaceCreated",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4106,7 +6185,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeSurfaceDestroyed",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4114,7 +6193,7 @@
                     "class": "Lorg/libsdl/app/SDLActivity;",
                     "name": "onNativeTouch",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4130,7 +6209,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeAddHaptic",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4138,7 +6217,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeAddJoystick",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4146,7 +6225,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeRemoveHaptic",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4154,7 +6233,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeRemoveJoystick",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4162,7 +6241,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "nativeSetupJNI",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 6
                   },
@@ -4170,7 +6249,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "onNativeHat",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4178,7 +6257,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "onNativeJoy",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4186,7 +6265,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "onNativePadDown",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4194,7 +6273,7 @@
                     "class": "Lorg/libsdl/app/SDLControllerManager;",
                     "name": "onNativePadUp",
                     "classPathLiteralPresent": false,
-                    "classSimpleNameLiteralPresent": false,
+                    "classSimpleNameLiteralPresent": true,
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   },
@@ -4222,7 +6301,8 @@
                     "methodNameLiteralPresent": true,
                     "matchingMethodStringCount": 1
                   }
-                ]
+                ],
+                "interpretation": "Call targets and matching printable strings are leads only; they do not prove RegisterNatives success or invocation."
               }
             ]
           },
@@ -6482,8 +8562,6 @@
   },
   "interpretation": {
     "missingStaticExportProvesRuntimeFailure": false,
-    "reason": "A static name match establishes a candidate exported JNI entrypoint only. Dynamic registration, JNI_OnLoad control flow, lazy library loading, reflection, and actual invocation require separate evidence or runtime observation.",
-    "rawNativeStringContentPublished": false,
-    "stringEvidence": "Identifier-presence and match counts only; raw ELF string contents are omitted."
+    "reason": "A static name match establishes a candidate exported JNI entrypoint only. Dynamic registration, JNI_OnLoad control flow, lazy library loading, reflection, and actual invocation require separate evidence or runtime observation."
   }
 }
