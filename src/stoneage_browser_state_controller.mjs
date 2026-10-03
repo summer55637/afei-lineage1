@@ -61,6 +61,7 @@ import { createBrowserBattleProfitCreditRuntime } from './stoneage_browser_battl
 import { createBrowserBattleCarriedLootRuntime } from './stoneage_browser_battle_carried_loot_runtime.mjs';
 import { createBrowserBattleEnemyExpRuntime } from './stoneage_browser_battle_enemy_exp_runtime.mjs';
 import { createBrowserBattleRidePetAdjustRuntime } from './stoneage_browser_battle_ride_pet_adjust_runtime.mjs';
+import { createBrowserBattleDexRuntime } from './stoneage_browser_battle_dex_runtime.mjs';
 import { createBrowserBattleDuelPointRuntime, ACTION_BATTLE_DUELPOINT_PLAN, BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_runtime.mjs';
 import { createBrowserBattleDuelPointCommitRuntime, ACTION_BATTLE_DUELPOINT_COMMIT, BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_commit_runtime.mjs';
 import { createBrowserBattleExpPlanRuntime, ACTION_BATTLE_EXP_PLAN, BROWSER_BATTLE_EXP_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_exp_runtime.mjs';
@@ -229,6 +230,7 @@ function createBrowserStateController({
   const battleCarriedLootRuntime=createBrowserBattleCarriedLootRuntime();
   const battleEnemyExpRuntime=createBrowserBattleEnemyExpRuntime();
   const battleRidePetAdjustRuntime=createBrowserBattleRidePetAdjustRuntime();
+  const battleDexRuntime=createBrowserBattleDexRuntime();
   const battleAttackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
     attackPreflightRuntime:battleAttackPreflightRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
@@ -284,6 +286,7 @@ function createBrowserStateController({
     targetListRuntime:battleTargetListRuntime,
     attackSequenceRuntime:battleAttackSequenceRuntime,
     ridePetAdjustRuntime:battleRidePetAdjustRuntime,
+    dexRuntime:battleDexRuntime,
     attackPreflightRuntime:battleAttackPreflightRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
     damagePlanRuntime:battleDamagePlanRuntime,
@@ -871,6 +874,7 @@ function createBrowserStateController({
             carriedLootReplaceRollsByEnemyBid:action.carriedLootReplaceRollsByEnemyBid??{},
             carriedLootReplaceSlotRollsByEnemyBid:action.carriedLootReplaceSlotRollsByEnemyBid??{},
             ridePetBidByParticipantBid:action.ridePetBidByParticipantBid??{},
+            dexRollByBid:action.dexRollByBid??{},
             now:action.now??null
           }
         );
