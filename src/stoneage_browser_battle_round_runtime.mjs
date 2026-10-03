@@ -291,7 +291,7 @@ async function resolveBattleRound(context,{
     if(!statusResult.ok){
       return {...statusResult,stage:'battle-round-status',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),actions:clone(actions),attacks:clone(attacks)};
     }
-    next.context=statusResult.battleContext;
+    next.context=clone(statusResult.battleContext?.context??statusResult.battleContext);
     statuses.push({...statusResult,rngConsumedCount:(statusCursor?.cursor??statusBeforeCursor)-statusBeforeCursor});
     actor=allEntries(next).find(x=>x.bid===actorBid)?.entry;
     if(!actor||!isAlive(actor))continue;
