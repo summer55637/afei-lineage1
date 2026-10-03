@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：88b1d29 — [docs] publish Android native and manifest evidence
-- 更新時間：2026-10-03T03:40:46Z
+- 最新 commit：a47f99a — [cleanup] remove non-game APK audit overhead
+- 更新時間：2026-10-03T11:59:25+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -19,7 +19,7 @@
 | 資料使用定位 | 專案內部來源依 provenance、identity、integrity 與版本驗證決定是否進入 production；外部資料另行核驗使用條件 |
 | 來源 | `ro0000/` 是主要實機／部署資料；手工外網端只有 `docs/搭建教程.txt`、`server/merged-source/wwwroot/`；其餘皆為 VM 一鍵端 |
 | Endpoint | 23 files 手工外網端；8,726 files VM；合計 8,749 files |
-| Android Client | ✅ APK 1.0（Manifest/DEX/Java wrapper、JNI/雙 ABI native、更新與補丁流程、SDL input/event loop、map cache/HitMap/prefetch、route/movement/warp、SABEX 220-slot / 33×33、ADRN/SPR/Real decoder 與 4 組 sprite fixup 已靜態稽核；✅ full-depth reachable Git history evidence 已通過；✅ v1 成因已收斂為「目前 MANIFEST.MF/SF 仍一致，但兩個 libStoneage.so 的 entry digest 與現行 payload 不符」，尚不能區分 stale digest 或簽章後替換；⚠️ ADRN 0x22–0x3E、0x44–0x48 僅完成跨來源欄位對照，target 直接 gameplay consumer 未閉合；⚠️ 外部 production resource bytes 與真機 runtime 驗證待補） |
+| Android Client | ✅ APK 1.0（Manifest/DEX/Java wrapper、JNI/雙 ABI native、更新與補丁流程、SDL input/event loop、map cache/HitMap/prefetch、route/movement/warp、SABEX 220-slot / 33×33、ADRN/SPR/Real decoder 與 4 組 sprite fixup 已靜態稽核；⚠️ v1 簽章摘要不符；外部資源 bytes 與真機驗證待補） |
 | 來源角色 | RO0000＝實際部署系統與資料；Fixed-C＝可讀的 C 程式行為／語義證據；兩者共同用於考據，不互相覆蓋 |
 | 原則 | 有證據才做；缺證據就 fail-closed；先 contract / state / transaction / regression，再做 UI |
 | 重開案 | 目前沒有 |
