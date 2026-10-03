@@ -427,9 +427,10 @@ function createBrowserBattleCounterChainRuntime({
   criticalDamageRuntime,
   damageReactRuntime,
   damageReactCommitRuntime,
-  damageDeathChainRuntime
+  damageDeathChainRuntime,
+  relifeRuntime
 }={}){
-  const required=[counterRuntime,profitCreditRuntime,carriedLootRuntime,attackSeqPreludeRuntime,damagePlanRuntime,criticalDamageRuntime,damageReactRuntime,damageReactCommitRuntime,damageDeathChainRuntime];
+  const required=[counterRuntime,profitCreditRuntime,carriedLootRuntime,enemyExpRuntime,attackSeqPreludeRuntime,damagePlanRuntime,criticalDamageRuntime,damageReactRuntime,damageReactCommitRuntime,damageDeathChainRuntime,relifeRuntime];
   return {
     ok:required.every(r=>r?.ok===true),
     format:BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT,
@@ -442,7 +443,9 @@ function createBrowserBattleCounterChainRuntime({
       criticalDamageRuntime,
       damageReactRuntime,
       damageReactCommitRuntime,
-      damageDeathChainRuntime
+      damageDeathChainRuntime,
+      enemyExpRuntime,
+      relifeRuntime
     })
   };
 }
