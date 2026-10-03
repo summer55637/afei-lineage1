@@ -124,6 +124,7 @@ jobs:
         run: |
           python3 tools/audit_ro0000_android_jni.py \
             --dex-audit artifacts/ro0000_android_dex_audit.json \
+            --java-flow-audit artifacts/ro0000_android_java_flow_audit.json \
             --apk 'ro0000/client/android/冰河石器-隐盟.apk' \
             --apk-sha256 "$(python3 -c 'import json; print(json.load(open("data/generated/stoneage_ro0000_android_apk_audit.json"))["source"]["sha256"])')" \
             --output artifacts/ro0000_android_jni_audit.json
