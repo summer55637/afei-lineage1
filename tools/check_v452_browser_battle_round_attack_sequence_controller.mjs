@@ -21,6 +21,10 @@ state.player.name='阿飛';
 state.player.hp=1000; state.player.maxHp=1000;
 state.player.mp=100; state.player.maxMp=100;
 state.player.stats={str:100,dex:100,tgh:100,vital:100};
+state.world.position={floorId:100,x:610,y:538};
+state.idle.enabled=true;
+state.idle.mode='encounter_pending';
+state.idle.routeId='hometown-0/floor-1000-to-100/1000_to_100_a';
 
 const controller=createBrowserStateController({
   state,
