@@ -1,7 +1,4 @@
 import {
-  prepareBrowserWorldEncounter
-} from './stoneage_browser_world_encounter_runtime.mjs';
-import {
   buildBattleContext,
   validateBattleContext,
   BROWSER_BATTLE_CONTEXT_RUNTIME_FORMAT
@@ -229,6 +226,11 @@ async function runWorldIdleLoop(state,{
     tickRecord.enemyGeneration=clone({...enemyGeneration,coreStatRolls:Array.isArray(enemyInput.enemyStatRolls)?clone(enemyInput.enemyStatRolls):null});
 
     const battleInput=isObject(input.battle)?input.battle:{};
+    let activePet=battleInput.activePet??null;
+    if(activePet==null){
+      const activePetId=currentState?.pets?.activePetId??null;
+      activePet=activePetId==null?null:(currentState?.pets?.petBox??[]).find(p=>String(p?.id??p?.petId??'')===String(activePetId))??null;
+    }
     let battleFieldNo=battleInput.battleFieldNo??null;
     let battleFieldResolution=null;
     if(battleFieldNo==null && typeof battleFieldNoProvider==='function'){
@@ -240,7 +242,7 @@ async function runWorldIdleLoop(state,{
       playerId:playerId??currentState?.player?.id??null,
       player:currentState?.player??null,
       playerElements:currentState?.creation?.elements??null,
-      activePet:battleInput.activePet??null,
+      activePet,
       team:enemyGeneration.team,
       encounter,
       groupId,
