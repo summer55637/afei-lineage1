@@ -59,6 +59,7 @@ import { createBrowserBattleAttackSequenceRuntime, ACTION_BATTLE_ATTACK_SEQUENCE
 import { createBrowserBattleProfitRouteRuntime, ACTION_BATTLE_PROFIT_ROUTE_PLAN, BROWSER_BATTLE_PROFIT_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_battle_profit_route_runtime.mjs';
 import { createBrowserBattleProfitCreditRuntime } from './stoneage_browser_battle_profit_credit_runtime.mjs';
 import { createBrowserBattleCarriedLootRuntime } from './stoneage_browser_battle_carried_loot_runtime.mjs';
+import { createBrowserBattleEnemyExpRuntime } from './stoneage_browser_battle_enemy_exp_runtime.mjs';
 import { createBrowserBattleDuelPointRuntime, ACTION_BATTLE_DUELPOINT_PLAN, BROWSER_BATTLE_DUELPOINT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_runtime.mjs';
 import { createBrowserBattleDuelPointCommitRuntime, ACTION_BATTLE_DUELPOINT_COMMIT, BROWSER_BATTLE_DUELPOINT_COMMIT_RUNTIME_FORMAT } from './stoneage_browser_battle_duelpoint_commit_runtime.mjs';
 import { createBrowserBattleExpPlanRuntime, ACTION_BATTLE_EXP_PLAN, BROWSER_BATTLE_EXP_PLAN_RUNTIME_FORMAT } from './stoneage_browser_battle_exp_runtime.mjs';
@@ -225,6 +226,7 @@ function createBrowserStateController({
   const battleDamageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
   const battleProfitCreditRuntime=createBrowserBattleProfitCreditRuntime();
   const battleCarriedLootRuntime=createBrowserBattleCarriedLootRuntime();
+  const battleEnemyExpRuntime=createBrowserBattleEnemyExpRuntime();
   const battleAttackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
     attackPreflightRuntime:battleAttackPreflightRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
@@ -234,7 +236,8 @@ function createBrowserStateController({
     damageReactCommitRuntime:battleDamageReactCommitRuntime,
     damageDeathChainRuntime:battleDamageDeathChainRuntime,
     profitCreditRuntime:battleProfitCreditRuntime,
-    carriedLootRuntime:battleCarriedLootRuntime
+    carriedLootRuntime:battleCarriedLootRuntime,
+    enemyExpRuntime:battleEnemyExpRuntime
   });
   const battleCounterRuntime=createBrowserBattleCounterRuntime();
   const battleDeathRuntime=createBrowserBattleDeathRuntime();
@@ -264,6 +267,7 @@ function createBrowserStateController({
     counterRuntime:battleCounterRuntime,
     profitCreditRuntime:battleProfitCreditRuntime,
     carriedLootRuntime:battleCarriedLootRuntime,
+    enemyExpRuntime:battleEnemyExpRuntime,
     attackSeqPreludeRuntime:battleAttackSeqPreludeRuntime,
     damagePlanRuntime:battleDamagePlanRuntime,
     criticalDamageRuntime:battleCriticalDamageRuntime,
