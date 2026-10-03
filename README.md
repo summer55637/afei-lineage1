@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：2f52329 — feat: route battle StatusSeq through state controller
-- 更新時間：2026-10-03T16:44:52+08:00
+- 最新 commit：66155c0 — [docs] auto-update README and endpoint evidence
+- 更新時間：2026-10-03T08:45:00Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.45
 - Playable HTML：⏸️ 尚未建立（刻意保留）
