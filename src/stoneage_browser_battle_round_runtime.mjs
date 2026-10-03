@@ -164,7 +164,7 @@ async function resolveBattleRound(context,{
   const id=String(roundId??'').trim();
   if(!id||id.length>128)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'round-id-required'};
 
-  const runtimeNames=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageDeathChainRuntime','statusRuntime','endRuntime'];
+  const runtimeNames=['attackPreflightRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','statusRuntime','endRuntime'];
   const missingRuntime=runtimeNames.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missingRuntime){
     return {
@@ -204,6 +204,7 @@ async function resolveBattleRound(context,{
   const runCriticalDamagePlan=({context:wrapper},options)=>runtimes.criticalDamageRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
   const runDamageReactPlan=({context:wrapper},options)=>runtimes.damageReactRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
   const commitDamageDeathChain=({context:wrapper},options)=>runtimes.damageDeathChainRuntime.commit({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
+  const commitSpecialDamageReact=({context:wrapper},options)=>runtimes.damageReactCommitRuntime.commit({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper)},options);
   const planBattleEnd=(wrapper)=>runtimes.endRuntime.plan({format:'stoneage-browser-battle-context-runtime-v1',context:clone(wrapper.context??wrapper)});
 
   const bundles=bundleMap(attackRolls);
@@ -370,16 +371,33 @@ async function resolveBattleRound(context,{
         return {...reactPlan,stage:'battle-round-damage-react',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)};
       }
 
-      if(reactPlan.reaction?.code!==0||reactPlan.attackerRidePet===true||reactPlan.defenderRidePet===true){
-        return {
-          ok:false,handled:false,stage:'battle-round-unsupported-damage-reaction',action:ACTION_BATTLE_ROUND_RESOLVE,
-          reason:'v446-round-only-ordinary-non-ride-damage-commit',reaction:reactPlan.reaction,turn:next.context.turn,
-          partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)
-        };
+      let specialReactionCommit=null;
+      if(reactPlan.reaction?.code!==0){
+        if(reactPlan.attackerRidePet===true||reactPlan.defenderRidePet===true){
+          return {
+            ok:false,handled:false,stage:'battle-round-unsupported-damage-reaction',action:ACTION_BATTLE_ROUND_RESOLVE,
+            reason:'v448-special-damage-react-ride-pet-deferred',reaction:reactPlan.reaction,turn:next.context.turn,
+            partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)
+          };
+        }
+        specialReactionCommit=commitSpecialDamageReact(next,{
+          damageReactPlan:reactPlan,
+          transactionId:`${id}:${actorBid}:${attacks.length}:special`,
+          expectedDamageRevision:reactPlan.damageCommitRevision,
+          critical:prelude.critical?.critical===true,
+          criticalFlag:bundle.criticalFlag??null,
+          battleFlags:int(bundle.battleFlags)??0,
+          deathRollByBid:bundle.deathRollByBid??{},
+          lerImmuneByBid:bundle.lerImmuneByBid??{}
+        });
+        if(!specialReactionCommit.ok){
+          return {...specialReactionCommit,stage:'battle-round-special-damage-react',action:ACTION_BATTLE_ROUND_RESOLVE,turn:next.context.turn,partialContext:clone(next.context),statuses:clone(statuses),actions:clone(actions),attacks:clone(attacks)};
+        }
+        next.context=clone(specialReactionCommit.battleContext?.context??specialReactionCommit.battleContext??next.context);
       }
 
       const tx=`${id}:${actorBid}:${attacks.length}`;
-      const deathCommit=commitDamageDeathChain(next,{
+      const deathCommit=specialReactionCommit??commitDamageDeathChain(next,{
         damageReactPlan:reactPlan,
         transactionId:tx,
         expectedDamageRevision:reactPlan.damageCommitRevision,
@@ -514,6 +532,7 @@ function createBrowserBattleRoundRuntime({
   damagePlanRuntime,
   criticalDamageRuntime,
   damageReactRuntime,
+  damageReactCommitRuntime,
   damageDeathChainRuntime,
   counterChainRuntime,
   statusRuntime,
@@ -525,6 +544,7 @@ function createBrowserBattleRoundRuntime({
     ['damagePlanRuntime',damagePlanRuntime],
     ['criticalDamageRuntime',criticalDamageRuntime],
     ['damageReactRuntime',damageReactRuntime],
+    ['damageReactCommitRuntime',damageReactCommitRuntime],
     ['damageDeathChainRuntime',damageDeathChainRuntime],
     ['counterChainRuntime',counterChainRuntime],
     ['statusRuntime',statusRuntime],
@@ -545,6 +565,7 @@ function createBrowserBattleRoundRuntime({
         damagePlanRuntime,
         criticalDamageRuntime,
         damageReactRuntime,
+        damageReactCommitRuntime,
         damageDeathChainRuntime,
         counterChainRuntime,
         statusRuntime,
