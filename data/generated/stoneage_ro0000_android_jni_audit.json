@@ -172,7 +172,7 @@
                     "apollo::JniMethodMgr::Init(_JNIEnv*, char**, int)"
                   ],
                   "indirectCallSiteCount": 2,
-                  "disassemblySha256": "98a27a6b55c7a7d956405601e602506fcaa775a8d8aa0dc011fb547f52ff498a"
+                  "disassemblySha256": "a9a297c4170512c87d120fb28a9e5123b63b6ab494583769c1dd4ec10715098a"
                 },
                 "candidateNativeMethodStrings": [
                   {
@@ -1372,7 +1372,7 @@
                   "instructionLineCount": 17,
                   "directCallTargets": [],
                   "indirectCallSiteCount": 0,
-                  "disassemblySha256": "853815b7c2035381414ef5644c12d4fa03a6d4017f52896b20398260b3d5124a"
+                  "disassemblySha256": "5e992b3d853021401b0d9c28596ccac8db7d5f546c919b81b6ad11975e2d3d93"
                 },
                 "candidateNativeMethodStrings": [
                   {
@@ -4464,7 +4464,7 @@
                     "dl_iterate_phdr"
                   ],
                   "indirectCallSiteCount": 2,
-                  "disassemblySha256": "cbe3e3fc148752a9a474f0a8950e51406be3c4e3eb2b2884fac232ed42b4c02b"
+                  "disassemblySha256": "295c3282999a9b9b5bf7b101d8e482e4958ec12fb7497a0ba73857721d7f5d07"
                 },
                 "candidateNativeMethodStrings": [
                   {
@@ -5664,7 +5664,7 @@
                   "instructionLineCount": 20,
                   "directCallTargets": [],
                   "indirectCallSiteCount": 0,
-                  "disassemblySha256": "7ac3c7efd572a9b25df2319ff30f016ccd5a684ab475477716e04f6cc10edd17"
+                  "disassemblySha256": "ceef939706fb4c35b05736bb2d4c99068f96881d09190eb6123a4471175b370b"
                 },
                 "candidateNativeMethodStrings": [
                   {
