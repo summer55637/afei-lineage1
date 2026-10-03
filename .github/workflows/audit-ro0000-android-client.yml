@@ -280,6 +280,7 @@ jobs:
             data/generated/stoneage_ro0000_android_native_resource_layout.json
             data/generated/stoneage_ro0000_android_rd_decoder_contract.json
             data/generated/stoneage_ro0000_android_battle_render_chain.json
+            data/generated/stoneage_ro0000_android_battle_command_decode_contract.json
             data/generated/stoneage_ro0000_android_map_prefetch_contract.json
             data/generated/stoneage_ro0000_android_native_resource_focus.json
             data/generated/stoneage_ro0000_android_adrn_consumer_triage.json
