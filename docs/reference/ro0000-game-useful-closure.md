@@ -145,3 +145,21 @@ RO0000 `setup.cf` 的 active skill file 是：
 
 `data/generated/stoneage_ro0000_singleplayer_item_skill_closure.json`
 
+
+
+## 2026-10-03 核心 Runtime Data 第二輪
+
+又完成一輪只針對單機有用資料的 source closure：
+
+- `map/mapset.txt)：RO0000 data / hydata 均 16,802 行且完全相同。Fixed-C `MAP_readMapConfFile()` 會將它載入成 image-number keyed map attributes；已確認可走性、高度、防禦、進出地圖傷害、battle-map selector，以及進入／離開時的異常狀態欄位都屬實際 runtime 語義。
+- `magic.txt)：data / hydata 均 223 行、完全相同，並由 `MAGIC_initMagic(getMagicfile())` 載入。無 endpoint variant 缺口。
+- `itematom.txt)：data / hydata 均 93 行、完全相同，並由 `ITEM_initItemAtom(getItematomfile())` 載入；屬素材／合成資料。無 endpoint variant 缺口。
+- `effect.txt)：data / hydata 均 847 行、完全相同；屬 encounter／map effect 時序設定。無 endpoint variant 缺口。
+- `inv.txt)：data / hydata 完全相同，48 bytes，且與 pinned Fixed-C 完全相同；Fixed-C 定義 `INV / ITM / MAG` 三類區域。由於目前 snapshot bytes 無法還原成可讀的區域記錄，不猜測其內容。
+- `battlemap.txt)：既有解析已閉合為 74 active blocks、199 distinct battle-map numbers；唯一反常資料是 `3137 to 1349` 的 reversed range，保留原始資料，不自行修正。
+- `petskill2.txt` / `skillcode.txt`：前一輪已確認為實際 gameplay variant，endpoint data 優先。
+
+詳細結果另存於：
+
+`data/generated/stoneage_ro0000_singleplayer_core_data_audit.json`
+
