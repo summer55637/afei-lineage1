@@ -1,4 +1,5 @@
 const BROWSER_BATTLE_AUTO_RUNTIME_FORMAT='stoneage-v469-browser-battle-auto-controller-v1';
+import { createBrowserBattleAutoLifecycleRuntime } from './stoneage_browser_battle_auto_lifecycle_runtime.mjs';
 const ACTION_BATTLE_AUTO_RUN='BATTLE_AUTO_RUN';
 const DEFAULT_MAX_ROUNDS=100;
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -41,5 +42,30 @@ async function runBattleAuto(context,{playerStrategyRuntime=null,enemyAiRuntime=
   const finishPlan=finished && history.length ? clone(history[history.length-1]?.round?.finishPlan??null) : null;
   return {ok:true,handled:true,stage:finished?'battle-auto-finished':'battle-auto-round-limit',format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,action:ACTION_BATTLE_AUTO_RUN,finished,winnerSide,finishReason,roundsExecuted:history.length,maxRounds:limit,history,context:next.context,finishPlan,persistentMutation:false,battleContextMutation:true,rngGeneratedInternally:false,source:{repository:'gavinlinasd/StoneAge',ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',functions:['BATTLE_Command','BATTLE_ai_all','BATTLE_Battling','BATTLE_PreCommandSeq','BATTLE_OnlyRescue']},contract:{playerPolicy:'Persistent State battleSettings.strategy -> existing idle battle strategy runtime',enemyPolicy:'Fixed-C source AI runtime',roundPolicy:'existing browser battle round runtime',persistentCommit:'deferred to existing Finish/Settlement transaction boundary'}};
 }
-function createBrowserBattleAutoRuntime(deps={}){return {ok:Object.values(deps).every(runtime=>runtime?.ok===true),format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,run:(context,options={})=>runBattleAuto(context,{...deps,...options})};}
+function createBrowserBattleAutoRuntime(deps={}){
+  const lifecycleRuntime=deps.lifecycleRuntime??createBrowserBattleAutoLifecycleRuntime(deps);
+  const requiredDeps=Object.entries(deps).filter(([name])=>name!=='lifecycleRuntime');
+  const ok=requiredDeps.every(([,runtime])=>runtime?.ok===true);
+  return {
+    ok,
+    format:BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,
+    run:async(context,options={})=>{
+      const base=await runBattleAuto(context,{...deps,...options});
+      if(base.ok!==true||options.completeLifecycle!==true||base.finished!==true)return base;
+      if(!options.state)return {ok:false,handled:false,stage:'battle-auto-lifecycle',action:ACTION_BATTLE_AUTO_RUN,reason:'persistent-state-required',context:clone(base.context)};
+      const lifecycle=lifecycleRuntime.run(
+        base.context,
+        options.state,
+        {
+          ...options,
+          settlementId:options.settlementId??null,
+          transactionPrefix:options.transactionPrefix??'battle-auto',
+          supplyRequired:options.supplyRequired??false,
+          now:options.now??(()=>new Date().toISOString())
+        }
+      );
+      return lifecycle;
+    }
+  };
+}
 export {BROWSER_BATTLE_AUTO_RUNTIME_FORMAT,ACTION_BATTLE_AUTO_RUN,DEFAULT_MAX_ROUNDS,runBattleAuto,createBrowserBattleAutoRuntime};
