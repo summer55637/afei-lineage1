@@ -11,6 +11,10 @@ function findEntry(context,bid){
   return Array.isArray(s?.entries)?s.entries[slot]??null:null;
 }
 function alive(entry){return !!entry&&int(entry.hp)!=null&&int(entry.hp)>0&&entry.isDie!==true&&entry.dead!==true;}
+function sideHasAlive(context,side){
+  const s=context?.context?.sides?.find(x=>Number(x?.side)===Number(side));
+  return Array.isArray(s?.entries)&&s.entries.some(alive);
+}
 function isFist(weaponType){return int(weaponType)===ITEM_FIST||String(weaponType??'').trim().toLowerCase()==='fist';}
 
 async function resolveAttackSequence(context,{
@@ -189,7 +193,11 @@ async function resolveAttackSequence(context,{
     damageExecuted=damageExecuted||hit.damageExecuted;
 
     const targetAfter=findEntry(next,prelude.finalTargetBid);
-    if(!alive(targetAfter)&&i+1<count)hit.remainingHitsBlocked=true;
+    if(!alive(targetAfter)&&i+1<count){
+      hit.remainingHitsBlocked=true;
+      const defenderSide=actorBid>=10?0:1;
+      if(!sideHasAlive(next,defenderSide))break;
+    }
     if(!alive(attacker)&&i+1<count)break;
   }
 
