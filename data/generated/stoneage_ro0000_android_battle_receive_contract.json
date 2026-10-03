@@ -1,0 +1,95 @@
+{
+  "format": "ro0000-android-battle-receive-contract-v1",
+  "target": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "x86LibSha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+    "armeabiV7aLibSha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+    "x86BuildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+  },
+  "function": {
+    "name": "lssproto_B_recv",
+    "signature": "void lssproto_B_recv(int fd, const char* command)",
+    "x86": {"address": "0x3f3470", "sizeBytes": 453},
+    "armeabiV7a": {"address": "0x2840dc", "sizeBytes": 272}
+  },
+  "dispatchKey": {
+    "byteOffset": 1,
+    "meaning": "second byte of the complete battle command string"
+  },
+  "targetAbiParity": {
+    "x86AndArmv7a": "both expose C/P/A/U branches and the same default command-buffer fallback; no Z/F/O timer branches are present in the target function body"
+  },
+  "branches": {
+    "C": {
+      "behavior": "copy complete command string into a four-entry ring buffer for battle-status messages",
+      "storage": {
+        "slotSizeBytes": 4096,
+        "slotCount": 4,
+        "writePointerUpdate": "(pointer + 1) & 3"
+      },
+      "targetEvidence": "x86 computes base + pointer*0x1000, strcpy(command), then masks incremented pointer with 3"
+    },
+    "P": {
+      "behavior": "parse three hexadecimal integers from command+3",
+      "format": "%X|%X|%X",
+      "decodedFields": [
+        "BattleMyNo",
+        "BattleBpFlag",
+        "BattleMyMp"
+      ],
+      "targetEvidence": "x86 and ARMv7a both call the scanf-family routine with command+3 and three output destinations"
+    },
+    "A": {
+      "behavior": "parse two hexadecimal integers from command+3",
+      "format": "%X|%X",
+      "decodedFields": [
+        "BattleAnimFlag",
+        "BattleSvTurnNo"
+      ],
+      "secondaryCondition": "when BattleTurnReceiveFlag is active, copy BattleSvTurnNo into BattleCliTurnNo and clear BattleTurnReceiveFlag",
+      "targetEvidence": "x86 tests an adjacent one-byte flag after the scanf call, then copies the server turn field and clears that flag"
+    },
+    "U": {
+      "behavior": "set escape flag byte/field to 1",
+      "decodedField": "BattleEscFlag"
+    },
+    "default": {
+      "behavior": "copy complete command string into a four-entry ring buffer for battle command/result processing",
+      "storage": {
+        "slotSizeBytes": 4096,
+        "slotCount": 4,
+        "writePointerUpdate": "(pointer + 1) & 3"
+      }
+    }
+  },
+  "packetFramingStringsObservedInTarget": {
+    "battleStatusParse": "%X|%X|%X",
+    "battleTurnParse": "%X|%X",
+    "skillCommandExamples": [
+      "P|%X|%X",
+      "W|%X|%X",
+      "J|%X|%X",
+      "I|%X|%X"
+    ]
+  },
+  "versionBoundary": {
+    "target": "No Z/F/O branches are present in target lssproto_B_recv.",
+    "crossSourceReference": "Public BismarckDD/Stoneage source contains optional PK_SYSTEM_TIMER_BY_ZHU branches for Z/F/O.",
+    "interpretation": "Do not automatically port Z/F/O client turn-timer receive behavior into the target browser reconstruction without additional target evidence."
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "model BattleStatus as a four-slot 0x1000-byte receive ring",
+      "model server player-battle metadata P packet as three hexadecimal integers",
+      "model server animation/turn A packet as two hexadecimal integers plus conditional client-turn synchronization",
+      "model U packet as immediate escape-state assertion",
+      "route all other B commands into a separate four-slot command ring before battle processing"
+    ],
+    "boundary": [
+      "C/default ring entries are stored here but their downstream parsers are separate functions and are not semantically decoded by this contract.",
+      "BattleBpFlag and BattleAnimFlag exact bit meanings beyond their named client variables are not asserted from this receiver alone.",
+      "Server acceptance and battle-result formulas are outside this client receiver."
+    ]
+  }
+}
