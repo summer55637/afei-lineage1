@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT='stoneage-v447-browser-battle-counter-chain-v1';
+const BROWSER_BATTLE_COUNTER_CHAIN_RUNTIME_FORMAT='stoneage-v454-browser-battle-counter-chain-v1';
 const ACTION_BATTLE_COUNTER_CHAIN_RESOLVE='BATTLE_COUNTER_CHAIN_RESOLVE';
 const MAX_COUNTER_CHAIN=5;
 const BATTLE_COM_ATTACK=1;
@@ -44,7 +44,7 @@ async function resolveCounterChain(context,{
   transactionPrefix=''
 }={},runtimes={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-counter-chain',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,reason:'battle-context-required'};
-  const required=['counterRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime'];
+  const required=['counterRuntime','attackSeqPreludeRuntime','damagePlanRuntime','criticalDamageRuntime','damageReactRuntime','damageReactCommitRuntime','damageDeathChainRuntime','profitCreditRuntime'];
   const missing=required.find(name=>!runtimes?.[name]||runtimes[name].ok!==true);
   if(missing)return {ok:false,handled:false,stage:'battle-counter-chain',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,reason:'counter-chain-runtime-dependency-invalid',dependency:missing};
 
@@ -212,6 +212,20 @@ async function resolveCounterChain(context,{
       );
       if(!commit.ok)return {...commit,stage:'battle-counter-chain-special-damage-react',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
       next.context=clone(commit.battleContext?.context??commit.battleContext??next.context);
+      const profitCredit=runtimes.profitCreditRuntime.apply(
+        {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+        {
+          attackerBids:[attackerBid],
+          allowPlayerCredit:attackerBid<10,
+          hitIndex:step,
+          source:'counter-special-react',
+          transactionPrefix:transactionPrefix||'counter',
+          now
+        }
+      );
+      if(!profitCredit.ok)return {...profitCredit,stage:'battle-counter-chain-profit-credit',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+      next.context=clone(profitCredit.context);
+      record.profitCredit=clone(profitCredit);
       record.damageReactPlan=clone(reactPlan);
       record.commit=clone(commit);
       record.damageExecuted=commit.damageExecuted===true;
@@ -237,6 +251,20 @@ async function resolveCounterChain(context,{
     if(!damageCommit.ok)return {...damageCommit,stage:'battle-counter-chain-damage-death',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
 
     next.context=clone(damageCommit.battleContext?.context??damageCommit.battleContext??next.context);
+    const profitCredit=runtimes.profitCreditRuntime.apply(
+      {format:'stoneage-browser-battle-context-runtime-v1',context:clone(next.context)},
+      {
+        attackerBids:[attackerBid],
+        allowPlayerCredit:attackerBid<10,
+        hitIndex:step,
+        source:'counter',
+        transactionPrefix:transactionPrefix||'counter',
+        now
+      }
+    );
+    if(!profitCredit.ok)return {...profitCredit,stage:'battle-counter-chain-profit-credit',action:ACTION_BATTLE_COUNTER_CHAIN_RESOLVE,step,partialContext:clone(next.context),chain:clone(chain)};
+    next.context=clone(profitCredit.context);
+    record.profitCredit=clone(profitCredit);
     record.damagePlan=clone(damagePlan);
     record.criticalPlan=clone(criticalPlan);
     record.damageReactPlan=clone(reactPlan);
@@ -289,6 +317,7 @@ async function resolveCounterChain(context,{
 }
 function createBrowserBattleCounterChainRuntime({
   counterRuntime,
+  profitCreditRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
   criticalDamageRuntime,
