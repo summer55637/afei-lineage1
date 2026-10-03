@@ -191,6 +191,8 @@ function buildReadme() {
     '- [Rebuild roadmap](docs/rebuild-roadmap.md)',
     '- [Persistent State current gap audit](docs/reference/persistent-state-current-audit.md)',
     '- [Idle battle strategy v1](docs/reference/idle-battle-strategy-v1.md)\n    - [V4.26 Battle damage commit](docs/reference/v426-browser-battle-damage-commit.md)',
+    '- [V4.71 Browser World Idle Loop](docs/reference/v471-browser-world-idle-loop.md)',
+    '- [V4.72 Browser Idle Supply](docs/reference/v472-browser-idle-supply.md)',
     '- [Android battle-map 33×33 lineage audit](docs/reference/ro0000-android-battle-map-lineage-audit.md)',
     '- [Generated state / evidence](data/generated/)',
     '',
