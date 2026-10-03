@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：a9d0adb — docs: close RO0000 pet skill shop endpoint audit
-- 更新時間：2026-10-03T15:42:58+08:00
+- 最新 commit：0911b9d — docs: catalog RO0000 pet skill shop instances
+- 更新時間：2026-10-03T15:44:29+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
