@@ -1,0 +1,349 @@
+{
+  "format": "ro0000-android-battle-waza-hitbox-contract-v1",
+  "source": {
+    "apk": "ro0000/client/android/冰河石器-隐盟.apk",
+    "apkSha256": "6899bffacce3560f25709d8e834b79a66e52711cf54d849cd36b05b4e7463d8c",
+    "libraries": {
+      "x86": {
+        "path": "lib/x86/libStoneage.so",
+        "sha256": "7c521d9245e2d1668a758402b6975009fd30a7b7b41857d32fc4b51300a29f3d",
+        "buildId": "ab97d1ad35dd9296d54ef8d8c6639511db606333"
+      },
+      "armeabiV7a": {
+        "path": "lib/armeabi-v7a/libStoneage.so",
+        "sha256": "4826c368a6791e680fc0e366e7af1c054454d2c5ead2ca831e2cd98838ecaa4d",
+        "buildId": "1b19ccce43386ffaf5371727161330e17b5105c4"
+      }
+    }
+  },
+  "function": {
+    "name": "BattleSetWazaHitBox(int, int)",
+    "address": {
+      "x86": "0x1011c0",
+      "armeabiV7a": "0x0f0241"
+    },
+    "sizeBytes": {
+      "x86": 7498,
+      "armeabiV7a": 4840
+    },
+    "x86SwitchTable": {
+      "virtualAddress": "0x72ef94",
+      "relativeBase": "0x927668",
+      "entries": [
+        "0x1012bb",
+        "0x101403",
+        "0x10158d",
+        "0x1017d7",
+        "0x101a21",
+        "0x101bae",
+        "0x101cf6",
+        "0x101e9a",
+        "0x10205f",
+        "0x1028d3",
+        "0x102d63",
+        "0x102499"
+      ]
+    }
+  },
+  "arguments": {
+    "typeflag0": {
+      "meaning": "pet skill",
+      "behavior": [
+        "store no as BattleWazaNo",
+        "read target mode from petSkill[battlePetNoBak][no].target",
+        "the acting hitbox is p_party[BattleMyNo + 5] for SELF"
+      ]
+    },
+    "typeflag1": {
+      "meaning": "profession skill",
+      "behavior": [
+        "use no directly as target mode",
+        "the acting hitbox is p_party[BattleMyNo] for SELF",
+        "select BATTLE_PROWAZA command state (value 5) instead of BATTLE_WAZA (value 4)",
+        "profession command uses prouseskill when target mode NONE sends immediately"
+      ]
+    }
+  },
+  "participantModel": {
+    "slots": 20,
+    "activeCondition": "ACTION.func != NULL",
+    "livingCondition": "ACTION.hp > 0",
+    "deadCondition": "ACTION.func != NULL and ACTION.hp <= 0",
+    "actionAttributeOffset": "0xe0",
+    "genericHitboxMask": "0x00000008",
+    "modeSpecificEligibilityMask": "0x00020000",
+    "eligibilityMeaning": "target binary checks this bit before assigning row/line-group hitboxes; it is retained as an observed raw mask, not relabeled from the reference header"
+  },
+  "targetModes": [
+    {
+      "index": 0,
+      "name": "PETSKILL_TARGET_MYSELF",
+      "selection": "single self actor",
+      "actorByTypeflag": {
+        "typeflag0": "p_party[BattleMyNo + 5]",
+        "typeflag1": "p_party[BattleMyNo]"
+      },
+      "mask": "0x00000008",
+      "operation": "OR",
+      "behavior": "sets generic hitbox on the actor; closes target window and advances to pet/profession skill command state"
+    },
+    {
+      "index": 1,
+      "name": "PETSKILL_TARGET_OTHER",
+      "selection": "any living active participant",
+      "slots": "0..19",
+      "filters": [
+        "func != NULL",
+        "hp > 0"
+      ],
+      "mask": "0x00000008",
+      "operation": "OR"
+    },
+    {
+      "index": 2,
+      "name": "PETSKILL_TARGET_ALLMYSIDE",
+      "selection": "all living active participants on the current side",
+      "slotsByBattleMyNo": {
+        "BattleMyNo < 10": "0..9",
+        "BattleMyNo >= 10": "10..19"
+      },
+      "filters": [
+        "func != NULL",
+        "hp > 0"
+      ],
+      "maskBySide": {
+        "slots 0..9": "0x00002000",
+        "slots 10..19": "0x00004000"
+      },
+      "operation": "OR"
+    },
+    {
+      "index": 3,
+      "name": "PETSKILL_TARGET_ALLOTHERSIDE",
+      "selection": "all living active participants on the opposing side",
+      "slotsByBattleMyNo": {
+        "BattleMyNo < 10": "10..19",
+        "BattleMyNo >= 10": "0..9"
+      },
+      "filters": [
+        "func != NULL",
+        "hp > 0"
+      ],
+      "maskBySlotHalf": {
+        "slots 0..9": "0x00002000",
+        "slots 10..19": "0x00004000"
+      },
+      "operation": "OR"
+    },
+    {
+      "index": 4,
+      "name": "PETSKILL_TARGET_ALL",
+      "selection": "all living active participants",
+      "slots": "0..19",
+      "filters": [
+        "func != NULL",
+        "hp > 0"
+      ],
+      "mask": "0x00002000",
+      "operation": "OR"
+    },
+    {
+      "index": 5,
+      "name": "PETSKILL_TARGET_NONE",
+      "selection": "no target selection; send command immediately",
+      "sendByTypeflag": {
+        "typeflag0": "W|%X|%X (BattleWazaNo, BattleMyNo + 5)",
+        "typeflag1": "P|%X|%X (prouseskill, BattleMyNo)"
+      },
+      "behavior": [
+        "turn off battle buttons",
+        "set menu-return state",
+        "play sound 203",
+        "pet path clears the saved target and target-selection flag"
+      ]
+    },
+    {
+      "index": 6,
+      "name": "PETSKILL_TARGET_OTHERWITHOUTMYSELF",
+      "selection": "all living active participants except slot BattleMyNo + 5",
+      "slots": "0..19",
+      "filters": [
+        "func != NULL",
+        "i != BattleMyNo + 5",
+        "hp > 0"
+      ],
+      "mask": "0x00000008",
+      "operation": "OR",
+      "caution": "name is a reference-enum label; raw exclusion is stated explicitly"
+    },
+    {
+      "index": 7,
+      "name": "PETSKILL_TARGET_WITHOUTMYSELFANDPET",
+      "selection": "all living active participants except the player and its pet",
+      "slots": "0..19",
+      "filters": [
+        "func != NULL",
+        "i != BattleMyNo + 5",
+        "i != BattleMyNo",
+        "hp > 0"
+      ],
+      "mask": "0x00000008",
+      "operation": "OR"
+    },
+    {
+      "index": 8,
+      "name": "PETSKILL_TARGET_ONE_ROW",
+      "selection": "grouped row highlight",
+      "groups": [
+        {
+          "slots": "0..4",
+          "mask": "0x00200000"
+        },
+        {
+          "slots": "5..9",
+          "mask": "0x00100000"
+        },
+        {
+          "slots": "10..14",
+          "mask": "0x00040000"
+        },
+        {
+          "slots": "15..19",
+          "mask": "0x00080000"
+        }
+      ],
+      "filters": [
+        "func != NULL",
+        "hp > 0",
+        "(ACTION.atr & 0x00020000) == 0"
+      ],
+      "operation": "OR"
+    },
+    {
+      "index": 9,
+      "name": "PETSKILL_TARGET_ONE_LINE",
+      "selection": "paired positions across two halves",
+      "pairs": [
+        "0..4 paired with +5",
+        "5..9 paired with -5",
+        "10..14 paired with +5",
+        "15..19 paired with -5"
+      ],
+      "filters": [
+        "source func != NULL",
+        "source hp > 0",
+        "(source ACTION.atr & 0x00020000) == 0"
+      ],
+      "mask": "0x00000008",
+      "operation": "OR except final pair path",
+      "anomaly": "the final 15..19 pair path writes ACTION.atr = 0x8 (direct assignment) rather than OR, potentially clearing other bits; counterpart active/HP is not independently checked in the observed loop"
+    },
+    {
+      "index": 10,
+      "name": "PETSKILL_TARGER_DEATH",
+      "selection": "all active dead participants",
+      "slots": "0..19",
+      "filters": [
+        "func != NULL",
+        "hp <= 0"
+      ],
+      "mask": "0x00000008",
+      "operation": "OR"
+    },
+    {
+      "index": 11,
+      "name": "PETSKILL_TARGET_ONE_ROW_ALL",
+      "selection": "grouped all-row highlight",
+      "groups": [
+        {
+          "slots": "0..4",
+          "mask": "0x02000000"
+        },
+        {
+          "slots": "5..9",
+          "mask": "0x01000000"
+        },
+        {
+          "slots": "10..14",
+          "mask": "0x00400000"
+        },
+        {
+          "slots": "15..19",
+          "mask": "0x00800000"
+        }
+      ],
+      "filters": [
+        "func != NULL",
+        "hp > 0",
+        "(ACTION.atr & 0x00020000) == 0"
+      ],
+      "operation": "OR"
+    }
+  ],
+  "commonTransition": {
+    "applies": "target modes 0..4 and 6..11; mode 5 has immediate-send path",
+    "behavior": [
+      "set battleTargetSelectFlag true",
+      "DeathAction(pActWnd) and set pActWnd NULL",
+      "ClearBattleButton()",
+      "set BattleCmdNo to 5 for typeflag 1, otherwise 4",
+      "play sound 217"
+    ],
+    "savedTarget": "battleWazaTargetBak writes vary by mode and typeflag; preserve per-mode behavior rather than assuming one common write"
+  },
+  "referenceComparison": {
+    "repository": "alrightlook/StoneAgeMobileApp",
+    "commit": "8c870c87ce1305c52fb6713bf824619467847bba",
+    "path": "android-project/jni/src/systeminc/pc.h; android-project/jni/src/systeminc/action.h; android-project/jni/src/system/battlemenu.cpp",
+    "role": "cross-source semantic reference only; exact source/build identity with APK is not established",
+    "enumValues": "public source enum order agrees with target jump-table indices 0..11: SELF, OTHER, ALLMYSIDE, ALLOTHERSIDE, ALL, NONE, OTHERWITHOUTMYSELF, WITHOUTMYSELFANDPET, ONE_ROW, ONE_LINE, DEATH, ONE_ROW_ALL",
+    "flagDifference": {
+      "referenceTravelMask": "0x00010000",
+      "targetEligibilityMask": "0x00020000",
+      "referenceColumnMasks": [
+        "0x00020000",
+        "0x00040000",
+        "0x00080000",
+        "0x00100000",
+        "0x00200000",
+        "0x00400000",
+        "0x00800000",
+        "0x01000000"
+      ],
+      "targetMode8Masks": [
+        "0x00200000",
+        "0x00100000",
+        "0x00040000",
+        "0x00080000"
+      ],
+      "targetMode11Masks": [
+        "0x02000000",
+        "0x01000000",
+        "0x00400000",
+        "0x00800000"
+      ],
+      "note": "Target row/line eligibility and group masks do not align one-to-one with the public action.h bit labels. Keep raw target values separate; do not copy reference macros into target reconstruction without a build-specific cross-check."
+    }
+  },
+  "reconstructionUse": {
+    "directUse": [
+      "implement skill-target highlight eligibility and masks from the target contract",
+      "keep target selection separate from server-side skill resolution",
+      "use immediate W/P command forms only for the NONE mode",
+      "preserve the mode-9 final-pair direct-assignment quirk only when reproducing target behavior; a new implementation should explicitly decide whether to preserve or safely correct it"
+    ],
+    "notProven": [
+      "server-side skill hit/damage formula",
+      "runtime touch behavior for every target mode",
+      "whether target/reference flag differences represent a source-version change or a build-specific patch",
+      "live battle playback on device"
+    ]
+  },
+  "verificationBoundary": {
+    "binaryIdentityPinned": true,
+    "x86SwitchEntriesRecorded": true,
+    "dualAbiFunctionAnchorRecorded": true,
+    "deviceRuntimeTargetSelectionObserved": false,
+    "serverSkillResolutionVerified": false
+  }
+}
