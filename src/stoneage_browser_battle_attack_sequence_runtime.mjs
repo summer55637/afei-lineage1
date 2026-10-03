@@ -195,8 +195,9 @@ async function resolveAttackSequence(context,{
     const targetAfter=findEntry(next,prelude.finalTargetBid);
     if(!alive(targetAfter)&&i+1<count){
       hit.remainingHitsBlocked=true;
-      const defenderSide=actorBid>=10?0:1;
-      if(!sideHasAlive(next,defenderSide))break;
+      const nextRawTarget=int(targets[i+1]);
+      const nextTargetEntry=nextRawTarget==null?null:findEntry(next,nextRawTarget);
+      if(nextRawTarget==null||!alive(nextTargetEntry)||nextRawTarget===prelude.finalTargetBid)break;
     }
     if(!alive(attacker)&&i+1<count)break;
   }
