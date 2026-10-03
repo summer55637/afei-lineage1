@@ -51,7 +51,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tools -p 'check_ro0000_android_git_resource_history.py'
           python3 tools/audit_ro0000_android_git_resource_history.py \\
-            --output data/generated/stoneage_ro0000_android_git_resource_history_audit.json
+            --output artifacts/stoneage_ro0000_android_git_resource_history_audit.json
       - name: Install multi-architecture disassembler
         run: |
           sudo apt-get update
