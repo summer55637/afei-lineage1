@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/stoneage_browser_battle_auto_lifecycle_runtime.mjs'
       - 'src/stoneage_browser_battle_auto_runtime.mjs'
+      - 'src/stoneage_browser_state_controller.mjs'
       - 'tools/check_v470_browser_battle_auto_full_lifecycle.mjs'
       - '.github/workflows/check-v470-browser-battle-auto-full-lifecycle.yml'
   workflow_dispatch:
