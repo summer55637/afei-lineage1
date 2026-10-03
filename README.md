@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：1ad6549 — docs: record RO0000 gameplay runtime config
-- 更新時間：2026-10-03T16:05:48+08:00
+- 最新 commit：7d96953 — docs: record RO0000 crafting process closure
+- 更新時間：2026-10-03T16:07:07+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
