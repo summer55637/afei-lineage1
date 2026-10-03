@@ -1,0 +1,36 @@
+{
+  "format": "stoneage-ro0000-title-endpoint-audit-v1",
+  "updated": "2026-10-03",
+  "endpoint": {
+    "titlename": {
+      "path": "ro0000/server/merged-source/gmsv/data/titlename.txt",
+      "activeRows": [
+        "0,サムギルの民",
+        "1,マリナスの民"
+      ]
+    },
+    "titleconfig": {
+      "path": "ro0000/server/merged-source/gmsv/data/titleconfig.txt",
+      "activeRows": [
+        "STR>=99999,\tMAXMP>=99999,\t\t\t\tTITLE=0"
+      ]
+    }
+  },
+  "dataHydataIdentical": true,
+  "runtime": {
+    "fixedSource": "gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56",
+    "startup": "init.c -> TITLE_initTitleName(getTitleNamefile()) and TITLE_initTitleConfig(getTitleConfigfile())",
+    "titleNameParser": "TITLE_initTitleName parses num,name pairs",
+    "titleConfigParser": "TITLE_initTitleConfig parses TITLE conditions plus character/item/equipment/skill parameters",
+    "checks": "TITLE_TitleCheck evaluates conditions and adds/removes titles",
+    "activeEndpointCondition": {
+      "title": 0,
+      "condition": "STR>=99999 AND MAXMP>=99999"
+    },
+    "systemNames": {
+      "0": "サムギルの民",
+      "1": "マリナスの民"
+    }
+  },
+  "scopeDecision": "Keep as small character-progression/title source closure; do not mine historical title data beyond the active endpoint."
+}
