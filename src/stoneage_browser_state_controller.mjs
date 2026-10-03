@@ -17,6 +17,7 @@ import { createBrowserWindowHealerRuntime, ACTION_NPC_WINDOW_HEALER_USE, BROWSER
 import { createBrowserIdleSupplyRuntime, ACTION_IDLE_SUPPLY_USE_HEALER, BROWSER_IDLE_SUPPLY_RUNTIME_FORMAT } from './stoneage_browser_idle_supply_runtime.mjs';
 import { createBrowserIdleSupplyRouteRuntime, BROWSER_IDLE_SUPPLY_ROUTE_RUNTIME_FORMAT } from './stoneage_browser_idle_supply_route_runtime.mjs';
 import { createBrowserIdleSupplyRouteExecutionRuntime, ACTION_IDLE_SUPPLY_RETURN_EXECUTE, BROWSER_IDLE_SUPPLY_ROUTE_EXECUTION_RUNTIME_FORMAT } from './stoneage_browser_idle_supply_route_execution_runtime.mjs';
+import { createBrowserIdleSupplyWindowHealerRuntime, ACTION_IDLE_SUPPLY_USE_WINDOW_HEALER, BROWSER_IDLE_SUPPLY_WINDOW_HEALER_RUNTIME_FORMAT } from './stoneage_browser_idle_supply_window_healer_runtime.mjs';
 import { createBrowserSavePointRuntime, ACTION_NPC_SAVEPOINT_SET, ACTION_NPC_SAVEPOINT_CONFIRM, BROWSER_SAVEPOINT_RUNTIME_FORMAT } from './stoneage_browser_savepoint_runtime.mjs';
 import { createBrowserIdleRuntime, ACTION_IDLE_LIST_ROUTES, ACTION_IDLE_ENABLE, ACTION_IDLE_EVENT, ACTION_IDLE_SIMULATE_FIRST_ENCOUNTER, ACTION_IDLE_STATUS, ACTION_IDLE_OFFLINE_RESUME, ACTION_IDLE_OFFLINE_APPLY_REWARDS, BROWSER_IDLE_RUNTIME_FORMAT } from './stoneage_browser_idle_runtime.mjs';
 import { createBrowserWorldMovementRuntime, ACTION_WORLD_MOVE_STEP, BROWSER_WORLD_MOVEMENT_RUNTIME_FORMAT } from './stoneage_browser_world_movement_runtime.mjs';
@@ -213,6 +214,7 @@ function createBrowserStateController({
   const windowHealerRuntime=moduleAudit ? createBrowserWindowHealerRuntime() : null;
   const idleRuntime=idleRouteCatalog ? createBrowserIdleRuntime({routeCatalog:idleRouteCatalog}) : null;
   const idleSupplyRuntime=(moduleAudit&&idleRouteCatalog) ? createBrowserIdleSupplyRuntime({idleRuntime,healerRuntime}) : null;
+  const idleSupplyWindowHealerRuntime=(idleRouteCatalog&&windowHealerRuntime) ? createBrowserIdleSupplyWindowHealerRuntime({idleRuntime,windowHealerRuntime}) : null;
   const savePointRuntime=moduleAudit ? createBrowserSavePointRuntime({moduleAudit,savePointCatalog}) : null;
   const warpRuntime=warpCatalog ? createBrowserWarpRuntime({warpCatalog}) : null;
   const movementMapLoader=withWorldMapRepairOverlay(worldMovementOptions.loadMap??loadSourceMapRuntime,worldMapRepairOverlay);
@@ -2094,7 +2096,7 @@ function createBrowserStateController({
       const requestedNpc=action?.npc??null;
       const targetCell=action?.targetCell??action?.targetPosition??action?.position??null;
       let resolvedWorldNpc=null;
-      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN,ACTION_NPC_EVENT_EXECUTE,ACTION_NPC_WARP_EXECUTE,ACTION_IDLE_SUPPLY_USE_HEALER,ACTION_NPC_WINDOW_HEALER_USE,ACTION_IDLE_SUPPLY_RETURN_EXECUTE].includes(type))) && targetCell){
+      if((type===ACTION_NPC_RESOLVE_AT || (!requestedNpc && [ACTION_NPC_TALK,ACTION_NPC_HEALER_USE,ACTION_NPC_SAVEPOINT_SET,ACTION_NPC_SAVEPOINT_CONFIRM,ACTION_NPC_ITEMSHOP_OPEN,ACTION_NPC_ITEMSHOP_BUY,ACTION_NPC_ITEMSHOP_SELL,ITEMSHOP_UI_OPEN,ACTION_NPC_EVENT_EXECUTE,ACTION_NPC_WARP_EXECUTE,ACTION_IDLE_SUPPLY_USE_HEALER,ACTION_NPC_WINDOW_HEALER_USE,ACTION_IDLE_SUPPLY_RETURN_EXECUTE,ACTION_IDLE_SUPPLY_USE_WINDOW_HEALER].includes(type))) && targetCell){
         if(!worldNpcRuntime){
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:'world-npc-runtime-not-configured',state:clone(currentState)};
         }
@@ -2109,6 +2111,31 @@ function createBrowserStateController({
           return {ok:false,handled:false,stage:'world-npc-resolution',reason:located.reason,npcs:located.npcs??[],state:clone(currentState)};
         }
         resolvedWorldNpc=located.npc;
+      }
+      if(type===ACTION_IDLE_SUPPLY_USE_WINDOW_HEALER){
+        const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
+        if(clearGate)return clearGate;
+        if(!idleSupplyWindowHealerRuntime||idleSupplyWindowHealerRuntime.ok!==true){
+          return {ok:false,handled:false,stage:'idle-supply-window-healer',reason:'browser-idle-supply-window-healer-runtime-not-configured',errors:idleSupplyWindowHealerRuntime?.errors??[],state:clone(currentState)};
+        }
+        const npc=resolvedWorldNpc??requestedNpc??null;
+        const player=action.player??action.position??currentState?.world?.position??null;
+        const result=await idleSupplyWindowHealerRuntime.complete(currentState,{
+          policy:action.policy??null,
+          npc,
+          player,
+          confirm:action.confirm!==false,
+          now:clockFactory(action.now,now),
+          expectedRevision:action.expectedRevision==null?Number(currentState?.revision??0):action.expectedRevision
+        });
+        if(result.ok===true&&result.handled===true&&result.state)currentState=clone(result.state);
+        return {
+          ...result,
+          format:BROWSER_IDLE_SUPPLY_WINDOW_HEALER_RUNTIME_FORMAT,
+          action:ACTION_IDLE_SUPPLY_USE_WINDOW_HEALER,
+          worldNpc:resolvedWorldNpc?clone(resolvedWorldNpc):null,
+          state:clone(result.state??currentState)
+        };
       }
       if(type===ACTION_IDLE_SUPPLY_RETURN_EXECUTE){
         const clearGate=requireBattleContextClearForWorldLoop(battleContext,type,currentState);
@@ -2399,6 +2426,7 @@ export {
   ACTION_NPC_WINDOW_HEALER_USE,
   ACTION_IDLE_SUPPLY_USE_HEALER,
   ACTION_IDLE_SUPPLY_RETURN_EXECUTE,
+  ACTION_IDLE_SUPPLY_USE_WINDOW_HEALER,
   ACTION_NPC_SAVEPOINT_SET,
   ACTION_NPC_SAVEPOINT_CONFIRM,
   ACTION_NPC_RESOLVE_AT,
@@ -2501,6 +2529,7 @@ export {
   BROWSER_IDLE_SUPPLY_RUNTIME_FORMAT,
   BROWSER_IDLE_SUPPLY_ROUTE_RUNTIME_FORMAT,
   BROWSER_IDLE_SUPPLY_ROUTE_EXECUTION_RUNTIME_FORMAT,
+  BROWSER_IDLE_SUPPLY_WINDOW_HEALER_RUNTIME_FORMAT,
   BROWSER_SAVEPOINT_RUNTIME_FORMAT,
   BROWSER_IDLE_RUNTIME_FORMAT,
   ACTION_IDLE_LIST_ROUTES,
