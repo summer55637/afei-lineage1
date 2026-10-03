@@ -230,7 +230,7 @@ function processBattleDeathExtras(context,{
     context:next.context,
     source:{
       repository:'gavinlinasd/StoneAge',
-      ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66ca1',
+      ref:'1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56',
       functions:['BATTLE_AddProfit','BATTLE_NormalDeadExtra','BATTLE_UltimateExtra','Pet_Check_Die','CHAR_PetAddVariableAi']
     },
     now:now??null
