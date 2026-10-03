@@ -18,9 +18,11 @@ V4.64 接入固定來源 `CHECK_ITEM_RELIFE -> ITEM_DIErelife -> BATTLE_MultiReL
 
 Battle Context 建立時從 canonical `inventory.playerItemSlots + inventory.itemRuntime.slots` 快照 slot 0..4 的所有有效 relife item instance。
 
-復活發生於完成 actor command 的 AddProfit/Enemy EXP 邊界後、下一個 actor command 前：
+復活發生於完成 actor command 的死亡判定後、AddProfit 前；這對應 Fixed-C `BATTLE_Battling` 的順序：
 
-`Damage/Death -> AddProfit death extra/loot/EXP -> ITEM_DIErelife -> next action`
+`Damage/Death -> CHECK_ITEM_RELIFE -> ITEM_DIErelife -> BATTLE_AddProfit -> next action`
+
+因此 Relife 成功時，後續 `BATTLE_AddProfit` 不再把該 Player 當成死亡者處理，不會產生戰敗 Charm / DefaultPet VariableAI death-extra。
 
 Relife 只先修改 Battle Context，並記錄 `sourceRelifeEvents`；不立即修改 Persistent State。
 
