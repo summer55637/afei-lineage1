@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：238bfbe — [docs] align hitbox evidence with ELF validator schema
-- 更新時間：2026-10-03T13:52:27+08:00
+- 最新 commit：ba08ba5 — Record Android damage display special branch
+- 更新時間：2026-10-03T14:01:27+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.42
 - Playable HTML：⏸️ 尚未建立（刻意保留）
