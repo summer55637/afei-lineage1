@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：d051218 — [docs] auto-update README and endpoint evidence
-- 更新時間：2026-10-03T08:41:02Z
+- 最新 commit：0c0be5c — docs: mark core battle StatusChange runtime integrated
+- 更新時間：2026-10-03T16:42:07+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.42
+- Regression 最高版本：V4.45
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 11 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.42 |
+| Battle Pipeline | ✅ V4.45 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
