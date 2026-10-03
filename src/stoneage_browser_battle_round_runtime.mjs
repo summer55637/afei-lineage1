@@ -1,4 +1,4 @@
-const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v457-browser-battle-round-runtime-v1';
+const BROWSER_BATTLE_ROUND_RUNTIME_FORMAT='stoneage-v459-browser-battle-round-runtime-v1';
 const ACTION_BATTLE_ROUND_RESOLVE='BATTLE_ROUND_RESOLVE';
 
 const BATTLE_MODE_BATTLE=2;
@@ -80,8 +80,8 @@ function sortTurnEntries(context){
   return allEntries(context)
     .filter(row=>isAlive(row.entry))
     .sort((a,b)=>{
-      const aq=num(a.entry?.quick??a.entry?.fixDex)??-Infinity;
-      const bq=num(b.entry?.quick??b.entry?.fixDex)??-Infinity;
+      const aq=num(a.entry?.sourceDex??a.entry?.quick??a.entry?.fixDex)??-Infinity;
+      const bq=num(b.entry?.sourceDex??b.entry?.quick??b.entry?.fixDex)??-Infinity;
       if(aq!==bq)return bq-aq;
       const as=num(a.entry?.sequencePower??a.entry?.sequence)??0;
       const bs=num(b.entry?.sequencePower??b.entry?.sequence)??0;
@@ -159,6 +159,7 @@ async function resolveBattleRound(context,{
   carriedLootReplaceRollsByEnemyBid={},
   carriedLootReplaceSlotRollsByEnemyBid={},
   ridePetBidByParticipantBid={},
+  dexRollByBid={},
   runtimes={}
 }={}){
   if(!context?.context)return {ok:false,handled:false,stage:'battle-round',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-context-required'};
@@ -223,6 +224,48 @@ async function resolveBattleRound(context,{
 
   const next=clone(context);
   next.context.turn=(int(next.context.turn)??0)+1;
+
+  const dexPrimes=[];
+  if(Object.keys(dexRollByBid??{}).length>0){
+    if(!runtimes.dexRuntime||runtimes.dexRuntime.ok!==true){
+      return {ok:false,handled:false,stage:'battle-round-dex',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'battle-dex-runtime-required'};
+    }
+    for(const row of allEntries(next)){
+      const rawRoll=dexRollByBid?.[String(row.bid)]??dexRollByBid?.[row.bid]??null;
+      if(rawRoll==null)continue;
+      const actor=row.entry;
+      const bundle=bundles.map.get(row.bid)??{};
+      let ridePetQuickAdjustment=null;
+      const ridePetBid=ridePetBidByParticipantBid?.[String(row.bid)]??ridePetBidByParticipantBid?.[row.bid]??null;
+      if(ridePetBid!=null){
+        if(!runtimes.ridePetAdjustRuntime||runtimes.ridePetAdjustRuntime.ok!==true){
+          return {ok:false,handled:false,stage:'battle-round-dex',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'ride-pet-adjust-runtime-required',actorBid:row.bid};
+        }
+        const pet=allEntries(next).find(x=>x.bid===int(ridePetBid))?.entry;
+        if(!pet)return {ok:false,handled:false,stage:'battle-round-dex',action:ACTION_BATTLE_ROUND_RESOLVE,reason:'ride-pet-entry-missing',actorBid:row.bid,ridePetBid:int(ridePetBid)};
+        ridePetQuickAdjustment=runtimes.ridePetAdjustRuntime.adjust({
+          character:{value:actor.quick??actor.fixDex},
+          pet:{value:pet.quick??pet.fixDex},
+          work:'quick',
+          action:'attack',
+          throwWeapon:bundle.throwWeapon===true
+        });
+        if(!ridePetQuickAdjustment.ok)return {...ridePetQuickAdjustment,stage:'battle-round-dex',action:ACTION_BATTLE_ROUND_RESOLVE};
+      }
+      const dexResult=runtimes.dexRuntime.resolve({
+        quick:actor.quick??actor.fixDex,
+        command:int(actor.battleCommands?.[0])??0,
+        throwWeapon:bundle.throwWeapon===true,
+        ridePetQuickAdjustment,
+        roll:rawRoll
+      });
+      if(!dexResult.ok){
+        return {...dexResult,stage:'battle-round-dex',action:ACTION_BATTLE_ROUND_RESOLVE,actorBid:row.bid};
+      }
+      actor.sourceDex=dexResult.dex;
+      dexPrimes.push({actorBid:row.bid,...clone(dexResult)});
+    }
+  }
 
   const order=sortTurnEntries(next);
   const statuses=[];
@@ -675,6 +718,7 @@ async function resolveBattleRound(context,{
     turn:next.context.turn,
     order:order.map(row=>row.bid),
     statuses,
+    dexPrimes,
     attackCountPrimes,
     targetListPrimes,
     actions,
@@ -697,13 +741,14 @@ async function resolveBattleRound(context,{
       repository:SOURCE_REPOSITORY,
       ref:SOURCE_REF,
       functions:['BATTLE_Command','BATTLE_Battling','BATTLE_PreCommandSeq','BATTLE_OnlyRescue'],
-      sourceOrder:['turn++','EntrySort','StatusSeq','BATTLE_GetAttackCount','BATTLE_TargetListSet','command execution','AttackSeq per hit','counter chain (after sequence when enabled)','end check','PreCommandSeq']
+      sourceOrder:['turn++','BATTLE_DexCalc','EntrySort','StatusSeq','BATTLE_GetAttackCount','BATTLE_TargetListSet','command execution','AttackSeq per hit','counter chain (after sequence when enabled)','end check','PreCommandSeq']
     },
     scope:{
       basicAttackOnly:true,
       playerUnarmedAttackCount:true,
       carriedLootQueue:true,
       ridePetExpCredit:true,
+      sourceDexOrder:true,
       sourceAttackCountEmbedded:true,
       bowTargetListEmbedded:true,
       maxAttackCountPerActor:50,
