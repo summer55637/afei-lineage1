@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：5629f0a — test: isolate V4.59 sourceDex ordering from attack execution
-- 更新時間：2026-10-03T19:32:19+08:00
+- 最新 commit：6fee7f2 — [docs] auto-update README and endpoint evidence
+- 更新時間：2026-10-03T11:32:27Z
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.59
 - Playable HTML：⏸️ 尚未建立（刻意保留）
