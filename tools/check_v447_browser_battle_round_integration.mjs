@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createBrowserBattleRoundRuntime } from '../src/stoneage_browser_battle_round_runtime.mjs';
+import { createBrowserBattleAttackCountRuntime } from '../src/stoneage_browser_battle_attack_count_runtime.mjs';
+import { createBrowserBattleTargetListRuntime } from '../src/stoneage_browser_battle_target_list_runtime.mjs';
+import { createBrowserBattleAttackSequenceRuntime } from '../src/stoneage_browser_battle_attack_sequence_runtime.mjs';
 import { createBrowserBattleCounterChainRuntime } from '../src/stoneage_browser_battle_counter_chain_runtime.mjs';
 import { createBrowserBattleCounterRuntime } from '../src/stoneage_browser_battle_counter_runtime.mjs';
 import { createBrowserBattleAttackPreflightRuntime } from '../src/stoneage_browser_battle_attack_preflight_runtime.mjs';
@@ -8,6 +11,7 @@ import { createBrowserBattleAttackSeqPreludeRuntime } from '../src/stoneage_brow
 import { createBrowserBattleDamagePlanRuntime } from '../src/stoneage_browser_battle_damage_plan_runtime.mjs';
 import { createBrowserBattleCriticalDamageRuntime } from '../src/stoneage_browser_battle_critical_damage_runtime.mjs';
 import { createBrowserBattleDamageReactRuntime } from '../src/stoneage_browser_battle_damage_react_runtime.mjs';
+import { createBrowserBattleDamageReactCommitRuntime } from '../src/stoneage_browser_battle_damage_react_commit_runtime.mjs';
 import { createBrowserBattleDamageDeathChainRuntime } from '../src/stoneage_browser_battle_damage_death_chain_runtime.mjs';
 import { createBrowserBattleStatusRuntime } from '../src/stoneage_browser_battle_status_runtime.mjs';
 import { createBrowserBattleEndRuntime } from '../src/stoneage_browser_battle_end_runtime.mjs';
@@ -58,13 +62,25 @@ const context={
   }
 };
 
+const attackCountRuntime=createBrowserBattleAttackCountRuntime();
+const targetListRuntime=createBrowserBattleTargetListRuntime();
 const counterRuntime=createBrowserBattleCounterRuntime();
 const attackPreflightRuntime=createBrowserBattleAttackPreflightRuntime();
 const attackSeqPreludeRuntime=createBrowserBattleAttackSeqPreludeRuntime();
 const damagePlanRuntime=createBrowserBattleDamagePlanRuntime();
 const criticalDamageRuntime=createBrowserBattleCriticalDamageRuntime();
 const damageReactRuntime=createBrowserBattleDamageReactRuntime();
+const damageReactCommitRuntime=createBrowserBattleDamageReactCommitRuntime();
 const damageDeathChainRuntime=createBrowserBattleDamageDeathChainRuntime();
+const attackSequenceRuntime=createBrowserBattleAttackSequenceRuntime({
+  attackPreflightRuntime,
+  attackSeqPreludeRuntime,
+  damagePlanRuntime,
+  criticalDamageRuntime,
+  damageReactRuntime,
+  damageReactCommitRuntime,
+  damageDeathChainRuntime
+});
 const statusRuntime=createBrowserBattleStatusRuntime();
 const endRuntime=createBrowserBattleEndRuntime();
 
@@ -77,6 +93,9 @@ const counterChainRuntime=createBrowserBattleCounterChainRuntime({
   damageDeathChainRuntime
 });
 const roundRuntime=createBrowserBattleRoundRuntime({
+  attackCountRuntime,
+  targetListRuntime,
+  attackSequenceRuntime,
   attackPreflightRuntime,
   attackSeqPreludeRuntime,
   damagePlanRuntime,
