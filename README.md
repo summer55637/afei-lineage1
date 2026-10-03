@@ -6,8 +6,8 @@
 
 ## 目前狀態
 
-- 最新 commit：e774137 — docs: sync README with V4.71 world idle loop
-- 更新時間：2026-10-03T22:43:05+08:00
+- 最新 commit：69b976f — feat: bind V4.72 idle supply healer boundary
+- 更新時間：2026-10-03T22:44:58+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
 - Regression 最高版本：V4.71
 - Playable HTML：⏸️ 尚未建立（刻意保留）
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.70；World Idle Loop ✅ V4.71 |
+| Battle Pipeline | ✅ V4.71 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
