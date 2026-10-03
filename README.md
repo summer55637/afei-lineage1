@@ -6,10 +6,10 @@
 
 ## 目前狀態
 
-- 最新 commit：76facaa — test: carry committed pet state into final exit chain
-- 更新時間：2026-10-03T22:12:21+08:00
+- 最新 commit：21e65b9 — docs: record V4.69 auto battle controller
+- 更新時間：2026-10-03T22:23:31+08:00
 - Fixed-C：gavinlinasd/StoneAge@1f90cb6cb57c1df70f39cde77a5a8ccd98b66c56
-- Regression 最高版本：V4.68
+- Regression 最高版本：V4.69
 - Playable HTML：⏸️ 尚未建立（刻意保留）
 
 ## 接手摘要
@@ -33,7 +33,7 @@
 | Map runtime | ✅ 33 張 |
 | Persistent State | ✅ Schema 1 |
 | Item / Economy | ✅ Runtime v1 |
-| Battle Pipeline | ✅ V4.68 |
+| Battle Pipeline | ✅ V4.69 |
 | Playable | ⏸️ 尚未建立（刻意保留） |
 
 ## Blocker
